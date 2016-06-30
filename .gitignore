@@ -1,0 +1,7 @@
+debug/
+Release/
+*.tmp
+bgbuild
+attributes.h
+attributes.txt
+config.bin
