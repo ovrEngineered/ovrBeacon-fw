@@ -3,5 +3,8 @@
     <sleeposc enable="true" ppm="30" />
     <sleep enable="true" />
     <txpower power="15" bias="5" />
-    <pmux regulator_pin="7" />
+    
+    <!--
+    <pmux regulator_pin="6" />
+    -->
 </hardware>

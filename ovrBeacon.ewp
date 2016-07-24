@@ -16,16 +16,28 @@
         <wantNonLocal>1</wantNonLocal>
         <debug>1</debug>
         <option>
+          <name>Extended stack address</name>
+          <state>0x9B</state>
+        </option>
+        <option>
+          <name>Extended stack mask</name>
+          <state>0x03</state>
+        </option>
+        <option>
+          <name>Extended stack is offset</name>
+          <state>0</state>
+        </option>
+        <option>
           <name>DerivativeDescriptionFile</name>
-          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2540F128.i51</state>
+          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2541F256.i51</state>
         </option>
         <option>
           <name>Previous Derivative File</name>
-          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2540F128.i51</state>
+          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2541F256.i51</state>
         </option>
         <option>
           <name>Showed Derivative</name>
-          <state>CC2540F128</state>
+          <state>CC2541F256</state>
         </option>
         <option>
           <name>CPU Core</name>
@@ -150,7 +162,7 @@
         </option>
         <option>
           <name>RTLibraryPath</name>
-          <state>$TOOLKIT_DIR$\LIB\DLIB\dl-pli-blxd-2e16incn.r51</state>
+          <state>$TOOLKIT_DIR$\LIB\DLIB\dl-pli-blxd-2e16inc.r51</state>
         </option>
         <option>
           <name>Input variant</name>
@@ -249,18 +261,6 @@
           <name>GRuntimeLibSelectSlave2</name>
           <version>0</version>
           <state>1</state>
-        </option>
-        <option>
-          <name>Extended stack address</name>
-          <state>0x9B</state>
-        </option>
-        <option>
-          <name>Extended stack mask</name>
-          <state>0x03</state>
-        </option>
-        <option>
-          <name>Extended stack is offset</name>
-          <state>0</state>
         </option>
       </data>
     </settings>
@@ -461,6 +461,7 @@
           <state>$PROJ_DIR$\externals\common-c\include\logger</state>
           <state>$PROJ_DIR$\externals\common-c\include\misc</state>
           <state>$PROJ_DIR$\externals\common-c\include\peripherals</state>
+          <state>$PROJ_DIR$\externals\common-c\include\runLoop</state>
           <state>$PROJ_DIR$\externals\common-c\include\serial</state>
           <state>$PROJ_DIR$\externals\common-c\include\stateMachine</state>
           <state>$PROJ_DIR$\externals\common-c\include\timeUtils</state>
@@ -792,7 +793,7 @@
         </option>
         <option>
           <name>XclFile</name>
-          <state>$EW_DIR$\Bluegiga\ble-1.3\linker\blestack_debug.xcl</state>
+          <state>$EW_DIR$\Bluegiga\ble-1.3\linker\blestack256_debug.xcl</state>
         </option>
         <option>
           <name>XclFileSlave</name>
@@ -1086,6 +1087,18 @@
         <wantNonLocal>1</wantNonLocal>
         <debug>0</debug>
         <option>
+          <name>Extended stack address</name>
+          <state>0x9B</state>
+        </option>
+        <option>
+          <name>Extended stack mask</name>
+          <state>0x03</state>
+        </option>
+        <option>
+          <name>Extended stack is offset</name>
+          <state>0</state>
+        </option>
+        <option>
           <name>DerivativeDescriptionFile</name>
           <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2540F128.i51</state>
         </option>
@@ -1320,18 +1333,6 @@
           <version>0</version>
           <state>1</state>
         </option>
-        <option>
-          <name>Extended stack address</name>
-          <state>0x9B</state>
-        </option>
-        <option>
-          <name>Extended stack mask</name>
-          <state>0x03</state>
-        </option>
-        <option>
-          <name>Extended stack is offset</name>
-          <state>0</state>
-        </option>
       </data>
     </settings>
     <settings>
@@ -1531,6 +1532,7 @@
           <state>$PROJ_DIR$\externals\common-c\include\logger</state>
           <state>$PROJ_DIR$\externals\common-c\include\misc</state>
           <state>$PROJ_DIR$\externals\common-c\include\peripherals</state>
+          <state>$PROJ_DIR$\externals\common-c\include\runLoop</state>
           <state>$PROJ_DIR$\externals\common-c\include\serial</state>
           <state>$PROJ_DIR$\externals\common-c\include\stateMachine</state>
           <state>$PROJ_DIR$\externals\common-c\include\timeUtils</state>
@@ -1862,7 +1864,7 @@
         </option>
         <option>
           <name>XclFile</name>
-          <state>$EW_DIR$\Bluegiga\ble-1.3\linker\blestack.xcl</state>
+          <state>$EW_DIR$\Bluegiga\ble-1.3\linker\blestack256.xcl</state>
         </option>
         <option>
           <name>XclFileSlave</name>
@@ -2156,16 +2158,28 @@
         <wantNonLocal>1</wantNonLocal>
         <debug>0</debug>
         <option>
+          <name>Extended stack address</name>
+          <state>0x9B</state>
+        </option>
+        <option>
+          <name>Extended stack mask</name>
+          <state>0x03</state>
+        </option>
+        <option>
+          <name>Extended stack is offset</name>
+          <state>0</state>
+        </option>
+        <option>
           <name>DerivativeDescriptionFile</name>
-          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2540F128.i51</state>
+          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2541F256.i51</state>
         </option>
         <option>
           <name>Previous Derivative File</name>
-          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2540F128.i51</state>
+          <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2541F256.i51</state>
         </option>
         <option>
           <name>Showed Derivative</name>
-          <state>CC2540F128</state>
+          <state>CC2541F256</state>
         </option>
         <option>
           <name>CPU Core</name>
@@ -2390,18 +2404,6 @@
           <version>0</version>
           <state>1</state>
         </option>
-        <option>
-          <name>Extended stack address</name>
-          <state>0x9B</state>
-        </option>
-        <option>
-          <name>Extended stack mask</name>
-          <state>0x03</state>
-        </option>
-        <option>
-          <name>Extended stack is offset</name>
-          <state>0</state>
-        </option>
       </data>
     </settings>
     <settings>
@@ -2601,6 +2603,7 @@
           <state>$PROJ_DIR$\externals\common-c\include\logger</state>
           <state>$PROJ_DIR$\externals\common-c\include\misc</state>
           <state>$PROJ_DIR$\externals\common-c\include\peripherals</state>
+          <state>$PROJ_DIR$\externals\common-c\include\runLoop</state>
           <state>$PROJ_DIR$\externals\common-c\include\serial</state>
           <state>$PROJ_DIR$\externals\common-c\include\stateMachine</state>
           <state>$PROJ_DIR$\externals\common-c\include\timeUtils</state>
@@ -3329,13 +3332,19 @@
             <name>$PROJ_DIR$\externals\common-c\include\misc\cxa_numberUtils.h</name>
           </file>
           <file>
-            <name>$PROJ_DIR$\EXTERNALS\common-c\include\misc\cxa_stringUtils.h</name>
+            <name>$PROJ_DIR$\externals\common-c\include\misc\cxa_stringUtils.h</name>
           </file>
         </group>
         <group>
           <name>peripherals</name>
           <file>
             <name>$PROJ_DIR$\externals\common-c\include\peripherals\cxa_ws2812String.h</name>
+          </file>
+        </group>
+        <group>
+          <name>runLoop</name>
+          <file>
+            <name>$PROJ_DIR$\externals\common-c\include\runLoop\cxa_runLoop.h</name>
           </file>
         </group>
         <group>
@@ -3374,7 +3383,7 @@
             <name>$PROJ_DIR$\externals\common-c\src\arch-ble112\cxa_ble112_dmaController.c</name>
           </file>
           <file>
-            <name>$PROJ_DIR$\externals\common-c\src\arch-ble112\cxa_ble112_gpio.c</name>
+            <name>$PROJ_DIR$\EXTERNALS\common-c\src\ARCH-BLE112\cxa_ble112_gpio.c</name>
           </file>
           <file>
             <name>$PROJ_DIR$\externals\common-c\src\arch-ble112\cxa_ble112_timeBase.c</name>
@@ -3383,7 +3392,7 @@
             <name>$PROJ_DIR$\externals\common-c\src\arch-ble112\cxa_ble112_usart.c</name>
           </file>
           <file>
-            <name>$PROJ_DIR$\externals\common-c\src\arch-ble112\cxa_ble112_ws2812String.c</name>
+            <name>$PROJ_DIR$\EXTERNALS\common-c\src\ARCH-BLE112\cxa_ble112_ws2812String.c</name>
           </file>
         </group>
         <group>
@@ -3456,6 +3465,12 @@
           </file>
         </group>
         <group>
+          <name>runLoop</name>
+          <file>
+            <name>$PROJ_DIR$\externals\common-c\src\runLoop\cxa_runLoop.c</name>
+          </file>
+        </group>
+        <group>
           <name>serial</name>
           <file>
             <name>$PROJ_DIR$\externals\common-c\src\serial\cxa_ioStream.c</name>
@@ -3484,7 +3499,13 @@
         <name>$PROJ_DIR$\project\include\cxa_config.h</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\project\include\ovr_chargingManager.h</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\project\include\ovr_ovrBeaconManager.h</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\project\include\ovr_sensorManager.h</name>
       </file>
     </group>
     <group>
@@ -3493,7 +3514,13 @@
         <name>$PROJ_DIR$\project\src\main.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\project\src\ovr_chargingManager.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\project\src\ovr_ovrBeaconManager.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\project\src\ovr_sensorManager.c</name>
       </file>
     </group>
   </group>

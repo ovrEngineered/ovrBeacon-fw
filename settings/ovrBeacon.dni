@@ -1,5 +1,5 @@
 [DebugChecksum]
-Checksum=1287344890
+Checksum=-120139012
 [Stack]
 FillEnabled=0
 OverflowWarningsEnabled=1
@@ -52,7 +52,7 @@ ShowSource=1
 [Breakpoints]
 Count=0
 [ChipconEmu]
-Stop timers on halt=1
+Stop timers on halt=0
 Leave target running=1
 [Log file]
 LoggingEnabled=_ 0

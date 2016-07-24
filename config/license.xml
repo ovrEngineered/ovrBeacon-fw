@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <license>
-    <!-- Bluetooth address to use, insert address read using BLE Update tool -->
+    <!-- BLE113 EVK
     <address value="00:07:80:77:dd:9e" />
-
-    <!-- BLE SDK license to use, insert license read using BLE Update tool -->
     <license value="ba9ed914338808453317cc160f0643f312462e8fa328c14ac064d7002699cbc7" />
+	-->
+    
+    <!-- ovrBeacon 1
+    <address value="00:07:80:39:3c:b5" />
+    <license value="e36ae75eb8f4e90d46b0f4078320180a977c80e34ea0139a1e9520de4c33c8e9" />
+    -->
+    
+    <!-- KegTracker 1 -->
+    <address value="00:07:80:39:3c:b4" />
+    <license value="a96de75eb8f46a2d1e4a35140f8520582067c6efaf1c9ee11f24ee6279488422" />
 </license>

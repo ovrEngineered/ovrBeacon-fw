@@ -19,6 +19,9 @@
 #include <cxa_protocolParser.h>
 #include <cxa_stateMachine.h>
 
+#include <ovr_chargingManager.h>
+#include <ovr_sensorManager.h>
+
 #define CXA_LOG_LEVEL			CXA_LOG_LEVEL_TRACE
 #include <cxa_logger_implementation.h>
 
@@ -36,14 +39,25 @@
 #define ADVWIN_MIN_MS					750
 #define ADVWIN_MAX_MS					1250
 
-#define FADE_PERIOD_MS					2000
+#define SENSE_PERIOD_MS					5000
+
+#define MAX_LED_INTENSITY				255
+#define SCALE_INTENSITY(valIn)			(((uint16_t)(valIn)) * ((uint16_t)MAX_LED_INTENSITY) / ((uint16_t)255))
+#define SCALE_INTENSITY_RGB(r,g,b)		SCALE_INTENSITY(r), SCALE_INTENSITY(g), SCALE_INTENSITY(b)
+
+#define FADE_PERIOD_ENUMERATE_MS		2000
+#define FADE_PERIOD_CHARGING_MS			2000
+#define FADE_PERIOD_CHARGED_MS			6000
+
+#define RGB_CHARGING					SCALE_INTENSITY_RGB(255, 64, 0)
+#define RGB_CHARGED 					SCALE_INTENSITY_RGB(0, 255, 0)
+#define RGB_ENUMERATE					SCALE_INTENSITY_RGB(0, 0, 255)
 
 
 // ******** local type definitions ********
 typedef enum
 {
 	STATE_IDLE,
-	STATE_READ_SENSE,
 	STATE_ENUMERATE
 }state_t;
 
@@ -76,19 +90,18 @@ typedef struct
 
 
 // ******** local function prototypes ********
-static void updateAdvertData(void);
-static void stateCb_readSense_enter(cxa_stateMachine_t *const smIn, int prevStateIdIn, void *userVarIn);
-static void stateCb_readSense_state(cxa_stateMachine_t *const smIn, void *userVarIn);
-static void stateCb_readSense_leave(cxa_stateMachine_t *const smIn, int nextStateIdIn, void* userVarIn);
+static void updateAdvertData(uint8_t battPcnt100In, int8_t temp_cIn);
+static void setChargingLedStatus(ovr_chargingManager_chargeState_t chrgStateIn);
+
+static void snsManCb_readComplete(ovr_sensorManager_t *const smIn, uint8_t batt_pcnt100In, int8_t temp_cIn, void* userVarIn);
+static void chrgManCb_onStateChange(ovr_chargingManager_t *const chrgIn, ovr_chargingManager_chargeState_t newStateIn, void* userVarIn);
+static void gpioCb_chargingInterrupt(cxa_gpio_t *const gpioIn, cxa_gpio_interruptType_t intTypeIn, bool newValIn, void* userVarIn);
+
 static void stateCb_idle_enter(cxa_stateMachine_t *const smIn, int prevStateIdIn, void *userVarIn);
 static void stateCb_idle_state(cxa_stateMachine_t *const smIn, void *userVarIn);
 static void stateCb_enumerate_enter(cxa_stateMachine_t *const smIn, int prevStateIdIn, void *userVarIn);
 static void stateCb_enumerate_state(cxa_stateMachine_t *const smIn, void *userVarIn);
 static void stateCb_enumerate_leave(cxa_stateMachine_t *const smIn, int nextStateIdIn, void* userVarIn);
-
-
-static void cb_battEst(cxa_batteryCapacityEstimator_t *const cbeIn, float battPcntIn, void* userVarIn);
-static void cb_tempSense(cxa_tempSensor_t *const tmpSnsIn, float newTemp_degCIn, void* userVarIn);
 
 
 // ********  local variable declarations *********
@@ -102,43 +115,55 @@ static enumerationType_t currEnumType = {.auditory = false, .haptic = false, .vi
 static uint32_t enumerationLen_ms = 0;
 
 static cxa_ws2812String_t* ws2812;
-static cxa_batteryCapacityEstimator_t* battEst;
-static cxa_tempSensor_t* tempSense;
 
-static uint8_t lastBatt_pcnt100;
-static int8_t lastTemp_c;
+static cxa_timeDiff_t td_readSense;
+static ovr_sensorManager_t snsMan;
+
+static ovr_chargingManager_t chrgMan;
 
 static uint8_t advertData_raw[29];
 static cxa_fixedByteBuffer_t advertData;
 
 
 // ******** global function implementations ********
-void ovr_ovrBeaconManager_init(cxa_ws2812String_t *const ws2812In, cxa_batteryCapacityEstimator_t *const bceIn, cxa_tempSensor_t *const tempSnsIn)
+void ovr_ovrBeaconManager_init(cxa_ws2812String_t *const ws2812In, cxa_batteryCapacityEstimator_t *const bceIn, cxa_tempSensor_t *const tempSnsIn,
+							   cxa_gpio_t *const gpio_chargingIn, cxa_gpio_t *const gpio_chargingStatIn)
 {
 	cxa_assert(ws2812In);
 	cxa_assert(bceIn);
 	cxa_assert(tempSnsIn);
+	cxa_assert(gpio_chargingIn);
+	cxa_assert(gpio_chargingStatIn);
 
 	// save our references
 	ws2812 = ws2812In;
-	battEst = bceIn;
-	tempSense = tempSnsIn;
 
 	// setup our logger
 	cxa_logger_init(&logger, "beaconMan");
 
-	// setup our timeDiff
+	// setup our timeDiffs
 	cxa_timeDiff_init(&td_enumerate, false);
+	cxa_timeDiff_init(&td_readSense, false);
+
+	// setup our various managers manager
+	ovr_sensorManager_init(&snsMan, bceIn, tempSnsIn);
+	ovr_chargingManager_init(&chrgMan, gpio_chargingIn, gpio_chargingStatIn);
+	ovr_chargingManager_addListener(&chrgMan, chrgManCb_onStateChange, NULL);
 
 	// initialize our advertisement data buffer
 	cxa_fixedByteBuffer_initStd(&advertData, advertData_raw);
 
+	// make sure we're monitoring our charging status lines
+	cxa_gpio_enableInterrupt(gpio_chargingIn, CXA_GPIO_INTERRUPTTYPE_RISING_EDGE, gpioCb_chargingInterrupt, NULL);
+
 	// setup our state machine
 	cxa_stateMachine_init(&stateMachine, "ovrBeacon");
-	cxa_stateMachine_addState(&stateMachine, STATE_READ_SENSE, "readSense", stateCb_readSense_enter, stateCb_readSense_state, stateCb_readSense_leave, NULL);
 	cxa_stateMachine_addState(&stateMachine, STATE_IDLE, "idle", stateCb_idle_enter, stateCb_idle_state, NULL, NULL);
 	cxa_stateMachine_addState(&stateMachine, STATE_ENUMERATE, "enumerate", stateCb_enumerate_enter, stateCb_enumerate_state, stateCb_enumerate_leave, NULL);
-	cxa_stateMachine_setInitialState(&stateMachine, STATE_READ_SENSE);
+	cxa_stateMachine_setInitialState(&stateMachine, STATE_IDLE);
+
+	// update our LED status for charging
+	setChargingLedStatus(ovr_chargingManager_getCurrentState(&chrgMan));
 
 	// set our advertising parameters (7= all three adv channels)
 	gap_set_adv_parameters( (uint16_t)((float)ADVWIN_MIN_MS/0.625), (uint16_t)((float)ADVWIN_MAX_MS/0.625), 7);
@@ -151,14 +176,8 @@ bool ovr_ovrBeaconManager_isEnumerating(void)
 }
 
 
-void ovr_ovrBeaconManager_update(void)
-{
-	cxa_stateMachine_update(&stateMachine);
-}
-
-
 // ******** local function implementations ********
-static void updateAdvertData(void)
+static void updateAdvertData(uint8_t battPcnt100In, int8_t temp_cIn)
 {
 	cxa_fixedByteBuffer_clear(&advertData);
 
@@ -178,64 +197,96 @@ static void updateAdvertData(void)
 	cxa_fixedByteBuffer_append_uint8(&advertData, (uint8_t)TXPOWER_1M);
 	cxa_fixedByteBuffer_append_uint8(&advertData, (uint8_t)TXPOWER_5M);
 	cxa_fixedByteBuffer_append_uint8(&advertData, (ovr_ovrBeaconManager_isEnumerating() << 0));
-	cxa_fixedByteBuffer_append_uint8(&advertData, lastBatt_pcnt100);
-	cxa_fixedByteBuffer_append_uint8(&advertData, lastTemp_c);
+	cxa_fixedByteBuffer_append_uint8(&advertData, battPcnt100In);
+	cxa_fixedByteBuffer_append_uint8(&advertData, temp_cIn);
+
+	ll_set_adv_data((uint8 const*)&advertData_raw, sizeof(advertData_raw));
 }
 
 
-static void stateCb_readSense_enter(cxa_stateMachine_t *const smIn, int prevStateIdIn, void *userVarIn)
+static void snsManCb_readComplete(ovr_sensorManager_t *const smIn, uint8_t batt_pcnt100In, int8_t temp_cIn, void* userVarIn)
 {
-	cxa_logger_info(&logger, "reading sensors");
+	// update our BTLE advertising data
+	updateAdvertData(batt_pcnt100In, temp_cIn);
 
-	cxa_assert(cxa_batteryCapacityEstimator_getValue_withCallback(battEst, cb_battEst, NULL));
-
-	// make sure we keep running
-	task_send_msg(task_id_first_user, 0, 0);
-}
-
-
-static void stateCb_readSense_state(cxa_stateMachine_t *const smIn, void *userVarIn)
-{
-	cxa_batteryCapacityEstimator_update(battEst);
-	cxa_tempSensor_update(tempSense);
-
-	// make sure we keep running
-	task_send_msg(task_id_first_user, 0, 0);
-}
-
-
-static void stateCb_readSense_leave(cxa_stateMachine_t *const smIn, int nextStateIdIn, void* userVarIn)
-{
-	// make sure our LEDs are off
-	cxa_ws2812String_blank_now(ws2812);
-
-	// update our advertising data
-	updateAdvertData();
-
-	// start advertising if we weren't
+	// start advertising on boot AFTER first reading our sensors
 	if( isFirstBoot )
 	{
 		gap_set_mode(gap_general_discoverable, gap_undirected_connectable);
 		isFirstBoot = false;
 	}
-	ll_set_adv_data((uint8 const*)&advertData_raw, sizeof(advertData_raw));
+}
+
+
+static void setChargingLedStatus(ovr_chargingManager_chargeState_t chrgStateIn)
+{
+	switch(chrgStateIn)
+	{
+		case OVR_CHARGESTATE_DISCHARGING:
+			cxa_ws2812String_blank_now(ws2812);
+			break;
+
+		case OVR_CHARGESTATE_CHARGING:
+			cxa_ws2812String_pulseColor_rgb(ws2812, FADE_PERIOD_CHARGING_MS, RGB_CHARGING);
+			break;
+
+		case OVR_CHARGESTATE_CHARGED:
+			cxa_ws2812String_pulseColor_rgb(ws2812, FADE_PERIOD_CHARGED_MS, RGB_CHARGED);
+			break;
+	}
+}
+
+
+static void chrgManCb_onStateChange(ovr_chargingManager_t *const chrgIn, ovr_chargingManager_chargeState_t newStateIn, void* userVarIn)
+{
+	// don't do anything if we're not idle (enumerating)
+	if( cxa_stateMachine_getCurrentState(&stateMachine) != STATE_IDLE ) return;
+
+	setChargingLedStatus(newStateIn);
+}
+
+
+static void gpioCb_chargingInterrupt(cxa_gpio_t *const gpioIn, cxa_gpio_interruptType_t intTypeIn, bool newValIn, void* userVarIn)
+{
+	// schedule us to run again immediately (not in an interrupt context)
+	task_send_timed(task_id_first_user, 0, 0, ((uint32_t)500 * (uint32_t)32));
 }
 
 
 static void stateCb_idle_enter(cxa_stateMachine_t *const smIn, int prevStateIdIn, void *userVarIn)
 {
-	cxa_logger_info(&logger, "becoming idle");
+	cxa_logger_info(&logger, "becoming idle (%s)", ovr_chargingManager_getCurrentState_string(&chrgMan));
 
-	// schedule us to run once per average advertising window (units are 32kHz ticks)
-	task_send_timed(task_id_first_user, 0, 0, ((((uint32_t)ADVWIN_MAX_MS + (uint32)ADVWIN_MIN_MS) / (uint32_t)2) * (uint32_t)32));
+	// reset our readSense timediff
+	cxa_timeDiff_setStartTime_now(&td_readSense);
+
+	// schedule us to run again immediately
+	task_send_msg(task_id_first_user, 0, 0);
 }
 
 
 static void stateCb_idle_state(cxa_stateMachine_t *const smIn, void *userVarIn)
 {
-	// force the transition since we won't be scheduled again
-	cxa_stateMachine_transition(&stateMachine, STATE_READ_SENSE);
-	cxa_stateMachine_update(&stateMachine);
+	ovr_chargingManager_chargeState_t currChargeState = ovr_chargingManager_getCurrentState(&chrgMan);
+	bool keepRunning =  (currChargeState == OVR_CHARGESTATE_CHARGING) ||
+						(currChargeState == OVR_CHARGESTATE_CHARGED);
+
+	// see if we need to start another sensor read
+	if( cxa_timeDiff_isElapsed_recurring_ms(&td_readSense, SENSE_PERIOD_MS) )
+	{
+		ovr_sensorManager_readSensors(&snsMan, snsManCb_readComplete, NULL);
+	}
+
+	// schedule next execution immediately OR after SENSE_PERIOD
+	if( keepRunning || ovr_sensorManager_isReadInProgress(&snsMan) )
+	{
+		task_send_msg(task_id_first_user, 0, 0);
+	}
+	else
+	{
+		// units are 32kHz ticks
+		task_send_timed(task_id_first_user, 0, 0, ((uint32_t)SENSE_PERIOD_MS * (uint32_t)32));
+	}
 }
 
 
@@ -244,7 +295,7 @@ static void stateCb_enumerate_enter(cxa_stateMachine_t *const smIn, int prevStat
 	cxa_logger_info(&logger, "starting enumeration - a:%d h:%d v:%d for %d secs", currEnumType.auditory, currEnumType.haptic, currEnumType.visual, enumerationLen_ms/1000);
 	cxa_timeDiff_setStartTime_now(&td_enumerate);
 
-	cxa_ws2812String_pulseColor_rgb(ws2812, FADE_PERIOD_MS, 0, 0, 255);
+	cxa_ws2812String_pulseColor_rgb(ws2812, FADE_PERIOD_ENUMERATE_MS, RGB_ENUMERATE);
 
 	// make sure we keep running
 	task_send_msg(task_id_first_user, 0, 0);
@@ -253,14 +304,11 @@ static void stateCb_enumerate_enter(cxa_stateMachine_t *const smIn, int prevStat
 
 static void stateCb_enumerate_state(cxa_stateMachine_t *const smIn, void *userVarIn)
 {
-	cxa_ws2812String_update(ws2812);
-
 	// see if our enumeration is finished
 	if( (enumerationLen_ms > 0) && cxa_timeDiff_isElapsed_ms(&td_enumerate, enumerationLen_ms) )
 	{
 		// force the transition since we won't be scheduled again
-		cxa_stateMachine_transition(&stateMachine, STATE_IDLE);
-		cxa_stateMachine_update(&stateMachine);
+		cxa_stateMachine_transitionNow(&stateMachine, STATE_IDLE);
 		return;
 	}
 
@@ -271,27 +319,7 @@ static void stateCb_enumerate_state(cxa_stateMachine_t *const smIn, void *userVa
 
 static void stateCb_enumerate_leave(cxa_stateMachine_t *const smIn, int nextStateIdIn, void* userVarIn)
 {
-	cxa_ws2812String_blank_now(ws2812);
-}
-
-
-static void cb_battEst(cxa_batteryCapacityEstimator_t *const cbeIn, float battPcntIn, void* userVarIn)
-{
-	lastBatt_pcnt100 = (uint8_t)(battPcntIn * 100.0);
-	cxa_logger_debug(&logger, "battPcnt: %d", lastBatt_pcnt100);
-
-	// now get our temperature
-	cxa_tempSensor_getValue_withCallback(tempSense, cb_tempSense, NULL);
-}
-
-
-static void cb_tempSense(cxa_tempSensor_t *const tmpSnsIn, float newTemp_degCIn, void* userVarIn)
-{
-	lastTemp_c = (int8_t)newTemp_degCIn;
-	cxa_logger_debug(&logger, "temp_f: %d", (unsigned int)CXA_TEMPSENSE_CTOF(lastTemp_c));
-
-	// go back to idle
-	cxa_stateMachine_transition(&stateMachine, STATE_IDLE);
+	setChargingLedStatus(ovr_chargingManager_getCurrentState(&chrgMan));
 }
 
 
@@ -307,9 +335,7 @@ void connection_disconnect_callback(uint8 conn, uint8 reason)
 	cxa_logger_info(&logger, "disconnect");
 
 	// start advertising again
-	updateAdvertData();
 	gap_set_mode(gap_general_discoverable, gap_undirected_connectable);
-	ll_set_adv_data((const uint8_t*)&advertData, sizeof(advertData));
 }
 
 
@@ -378,8 +404,7 @@ void gatt_attribute_value_callback(uint8 connection, uint16 handle, enum attribu
 				enumerationLen_ms = enumerationLen_s * 1000;
 
 				// force the transition so we get scheduled to execute
-				cxa_stateMachine_transition(&stateMachine, STATE_ENUMERATE);
-				cxa_stateMachine_update(&stateMachine);
+				cxa_stateMachine_transitionNow(&stateMachine, STATE_ENUMERATE);
 			}
 
 			// good write!

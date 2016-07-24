@@ -21,7 +21,9 @@
 #include <cxa_ble112_usart.h>
 #include <cxa_ble112_ws2812String.h>
 #include <cxa_delay.h>
+#include <cxa_led_gpio.h>
 #include <cxa_stringUtils.h>
+#include <cxa_runLoop.h>
 #include <cxa_tempSensor_adc.h>
 #include <cxa_timeDiff.h>
 
@@ -33,6 +35,7 @@
 
 
 // ******** local macro definitions ********
+#define NUM_PIXELS			1
 
 
 // ******** local function prototypes ********
@@ -42,8 +45,11 @@ static void backgroundUserTask(uint8_t context, uint8_t message);
 
 // ******** local variable declarations ********
 static cxa_timeDiff_t td_genPurp;
-static cxa_ble112_gpio_t led_error;
+cxa_ble112_gpio_t led_error;
 static cxa_ble112_usart_t usart_debug;
+
+static cxa_ble112_gpio_t gpio_charging;
+static cxa_ble112_gpio_t gpio_chargingStat;
 
 static cxa_ble112_adcChannel_t adc_temp;
 static cxa_tempSensor_adc_t tempSense;
@@ -53,7 +59,7 @@ static cxa_batteryCapacityEstimator_t battEst;
 
 static cxa_ble112_gpio_t gpio_ws2812;
 static cxa_ble112_ws2812String_t neoPixels;
-static cxa_ws2812String_pixelBuffer_t pixs[4];
+static cxa_ws2812String_pixelBuffer_t pixs[NUM_PIXELS];
 
 
 const task_handler tasks[] = {
@@ -66,6 +72,12 @@ const task_handler tasks[] = {
 
 
 // ******** global function implementations ********
+static void onInt(cxa_gpio_t *const gpioIn, cxa_gpio_interruptType_t intTypeIn, bool newValIn, void* userVarIn)
+{
+	cxa_gpio_toggle(&led_error.super);
+}
+
+
 void main(void)
 {
 	sysInit();
@@ -94,6 +106,10 @@ void main(void)
     ////////////////////////////////////////////////////////////////
 
 
+	static cxa_ble112_gpio_t tmpGpio;
+	cxa_ble112_gpio_init_input(&tmpGpio, CXA_BLE112_GPIO_PORT_0, 3, CXA_GPIO_POLARITY_NONINVERTED);
+	cxa_assert(cxa_gpio_enableInterrupt(&tmpGpio.super, CXA_GPIO_INTERRUPTTYPE_RISING_EDGE, onInt, NULL));
+
 	// and start the main stack loop
     blestack_loop();
 }
@@ -103,7 +119,7 @@ void main(void)
 static void sysInit()
 {
 	// make sure we at least have a GPIO for asserts
-	cxa_ble112_gpio_init_output(&led_error, CXA_BLE112_GPIO_PORT_1, 0, CXA_GPIO_POLARITY_INVERTED, 0);
+	cxa_ble112_gpio_init_output(&led_error, CXA_BLE112_GPIO_PORT_1, 0, CXA_GPIO_POLARITY_NONINVERTED, 0);
 	cxa_assert_setAssertGpio(&led_error.super);
 
 	// should setup most of our hardware as needed
@@ -120,24 +136,40 @@ static void sysInit()
 	cxa_ble112_timeBase_init();
 	cxa_timeDiff_init(&td_genPurp, true);
 
+	// give our system a chance to settle
+	cxa_delay_ms(1000);
+
     // now setup our application-specific components
     blestack_init();
 
-    //cxa_ble112_adcChannel_init_internalRef(&adc_batt, CXA_BLE112_ADC_CHAN_AVDD_DIV3);
+    cxa_ble112_gpio_init_input(&gpio_chargingStat, CXA_BLE112_GPIO_PORT_1, 1, CXA_GPIO_POLARITY_NONINVERTED);
+    cxa_ble112_gpio_init_input(&gpio_charging, CXA_BLE112_GPIO_PORT_1, 4, CXA_GPIO_POLARITY_NONINVERTED);
+
+    cxa_ble112_adcChannel_init_internalRef(&adc_batt, CXA_BLE112_ADC_CHAN_AVDD_DIV3);
     cxa_ble112_adcChannel_init_internalRef(&adc_batt, CXA_BLE112_ADC_CHAN_AIN6);
     cxa_batteryCapacityEstimator_init(&battEst, &adc_batt.super, 3.0, 3.3, 2.0);
 
     cxa_ble112_adcChannel_init_internalRef(&adc_temp, CXA_BLE112_ADC_CHAN_INTTEMP);
     cxa_tempSensor_adc_init_onePoint(&tempSense, &adc_temp.super, 25.0, 0.448);
 
-    cxa_ble112_gpio_init_output(&gpio_ws2812, CXA_BLE112_GPIO_PORT_0, 0, CXA_GPIO_POLARITY_INVERTED, 0);
+    cxa_ble112_gpio_init_output(&gpio_ws2812, CXA_BLE112_GPIO_PORT_0, 0, CXA_GPIO_POLARITY_NONINVERTED, 0);
 	cxa_ble112_ws2812String_init(&neoPixels, &gpio_ws2812, pixs, sizeof(pixs)/sizeof(*pixs));
 
-    ovr_ovrBeaconManager_init(&neoPixels.super, &battEst, &tempSense.super);
+    ovr_ovrBeaconManager_init(&neoPixels.super, &battEst, &tempSense.super, &gpio_charging.super, &gpio_chargingStat.super);
 }
 
 
 static void backgroundUserTask(uint8_t context, uint8_t message)
 {
-	ovr_ovrBeaconManager_update();
+	cxa_runLoop_iterate();
+}
+
+
+void cxa_criticalSection_enter(void)
+{
+}
+
+
+void cxa_criticalSection_exit(void)
+{
 }
