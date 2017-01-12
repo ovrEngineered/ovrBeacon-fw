@@ -1,1 +1,0 @@
-When deloying using "BLEUpdate" requires 'bgbuild' version ble-1.2.2-100

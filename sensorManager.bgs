@@ -1,0 +1,56 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## private constants ########
+const UPDATE_RATE_S = 2
+
+const BATT_ADCNUM = 0
+const BATT_R1_OHM = 12000
+const BATT_R2_OHM = 5100
+const BATT_100PCNT_MV = 4200
+const BATT_0PCNT_MV = 3400
+
+
+######## private variables ########
+
+
+######## public procedures ########
+export procedure sensorManager_init()
+   call battery_init(BATT_ADCNUM, BATT_100PCNT_MV, BATT_0PCNT_MV, BATT_R1_OHM, BATT_R2_OHM)
+   call adxl345_init()
+   call si7050_init()
+   call ltr329_init()
+
+   call hardware_set_soft_timer(UPDATE_RATE_S * 32768, 0, 0)
+end
+
+
+######## system events ########
+event hardware_soft_timer(handle)
+   # see if this is meant for other timed events first...
+   if( handle = ENUMMAN_TIMERHANDLE_ENUMCOMPLETE ) then
+      call enumerationManager_stopEnumeration()
+      return
+   end if
+
+   # must be meant for us...start our updating
+
+   call ltr329_update()
+   call adxl345_update()
+   call si7050_update()
+   call chargingManager_update()
+   call battery_update()
+end
+
+
+event hardware_adc_result(input, value)
+   call battery_handleAdcRead(input, value)
+   if( battery_isUpdated ) then
+      battery_isUpdated = 0
+      call attributes_write(char_batt_pcnt100, 0, 1, battery_vbatt_pcnt100)
+      call ovrBeaconAdvertManager_updateBattery_mv(battery_vbatt_mv)
+      call ovrBeaconAdvertManager_updateBattery_pcnt100(battery_vbatt_pcnt100)
+   end if
+end

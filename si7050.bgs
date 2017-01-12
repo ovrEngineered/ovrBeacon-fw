@@ -1,0 +1,33 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## private constants ########
+
+
+######## public variables ########
+
+
+######## private variables ########
+dim result
+dim data_len
+dim data(2)
+dim temp_deciDegC
+
+
+######## public procedures ########
+export procedure si7050_init()
+   temp_deciDegC = 0
+end
+
+
+export procedure si7050_update()
+   call hardware_i2c_write($80, 0, 1, "\xE3")
+   call hardware_i2c_read($80, 1, 2)(result, data_len, data(:))
+
+   temp_deciDegC = (data(0:1) << 8) | (data(1:1) << 0)
+   temp_deciDegC = ((temp_deciDegC * 1757) / 65536) - 469
+
+   call ovrBeaconAdvertManager_updateTemp_degc(temp_deciDegC / 10)
+end

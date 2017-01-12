@@ -1,0 +1,43 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## private constants ########
+
+
+######## public variables ########
+
+
+######## private variables ########
+dim result
+dim data_len
+dim data(1)
+
+dim lightVal
+
+
+######## public procedures ########
+export procedure ltr329_init()
+   # bring out of standby, set gain
+   call hardware_i2c_write($52, 1, 2, "\x80\x0D")
+end
+
+
+export procedure ltr329_update()
+   # read channel 1 (infra-red)
+   call hardware_i2c_write($52, 0, 1, "\x88")
+   call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
+   call hardware_i2c_write($52, 0, 1, "\x89")
+   call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
+
+   # read channel 2 (visible)
+   call hardware_i2c_write($52, 0, 1, "\x8A")
+   call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
+   lightVal = (data(0:1) << 8)
+   call hardware_i2c_write($52, 0, 1, "\x8B")
+   call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
+   lightVal = lightVal | (data(0:1) << 0)
+
+   call ovrBeaconAdvertManager_updateLight(lightVal)
+end

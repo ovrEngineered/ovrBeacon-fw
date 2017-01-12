@@ -1,0 +1,37 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## imports ########
+import "advertising.bgs"
+import "ovrBeaconAdvertManager.bgs"
+import "battery.bgs"
+import "si7050.bgs"
+import "pca9624.bgs"
+import "chargingManager.bgs"
+import "enumerationManager.bgs"
+import "adxl345.bgs"
+import "ltr329.bgs"
+import "sensorManager.bgs"
+import "gatt.bgs"
+
+
+######## system events ########
+event system_boot(major, minor, patch, build, ll_version, protocol_version, hw)
+   call ovrBeaconAdvertManager_init()
+
+   call pca9624_init()
+   call chargingManager_init()
+   call sensorManager_init()
+
+   call ovrBeaconAdvertManager_start()
+end
+
+
+event hardware_io_port_status(timestamp, port, irq, state)
+   if( (port = ADXL345_PORT) && (state & (1 << ADXL345_PINNUM_2)) ) then
+      call adxl345_handleInterrupt_2()
+      call enumerationManager_startEnumeration(ADXL345_ENUMERATION_TIME_S)
+   end if
+end

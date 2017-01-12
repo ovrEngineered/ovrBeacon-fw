@@ -1,0 +1,61 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## private constants ########
+const DEV_TYPE = 2
+const COMPANY_ID = $ffff
+const NUM_USER_BYTES = 6
+
+
+######## public variables ########
+
+
+######## private variables ########
+dim statusByte
+
+
+######## public procedures ########
+export procedure ovrBeaconAdvertManager_init()
+   call advertising_init(DEV_TYPE, COMPANY_ID, NUM_USER_BYTES)
+   statusByte = 0
+end
+
+
+export procedure ovrBeaconAdvertManager_start()
+   call advertising_start()
+end
+
+
+export procedure ovrBeaconAdvertManager_updateChargingStatus(isChargingIn)
+   statusByte = statusByte & $7F | (isChargingIn << 7)
+   call advertising_setByteAtIndex(0, statusByte)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateEnumerationStatus(isEnumeratingIn)
+   statusByte = statusByte & $BF | (isEnumeratingIn << 6)
+   call advertising_setByteAtIndex(0, statusByte)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateBattery_pcnt100(newBatt_pcntIn)
+   call advertising_setByteAtIndex(1, newBatt_pcntIn)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateBattery_mv(batt_mvIn)
+   call advertising_setByteAtIndex(4, (batt_mvIn & $000000ff) >> 0)
+   call advertising_setByteAtIndex(5, (batt_mvIn & $0000ff00) >> 8)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateTemp_degc(temp_degcIn)
+   call advertising_setByteAtIndex(2, temp_degcIn)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateLight(lightIn)
+   call advertising_setByteAtIndex(3, (lightIn & $0000ff00) >> 8)
+end

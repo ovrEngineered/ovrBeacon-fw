@@ -1,0 +1,46 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## imports ########
+
+
+######## public constants ########
+export const ENUMMAN_TIMERHANDLE_ENUMCOMPLETE = 1
+
+
+######## private constants ########
+const BLINK_PERIOD_MS = 500
+const BLINK_DUTYCYCLE_PCNT100 = 75
+const RGB_ENUMERATION() = "\x00\x00\xFF"
+
+
+######## public variables ########
+
+
+######## private variables ########
+
+
+######## public procedures ########
+export procedure enumerationManager_startEnumeration(time_sIn)
+   call ovrBeaconAdvertManager_updateEnumerationStatus(1)
+   call pca9624_blinkRgb(BLINK_PERIOD_MS, BLINK_DUTYCYCLE_PCNT100, RGB_ENUMERATION(:))
+   call hardware_set_soft_timer(time_sIn * 32768, ENUMMAN_TIMERHANDLE_ENUMCOMPLETE, 1)
+end
+
+
+export procedure enumerationManager_stopEnumeration()
+   call ovrBeaconAdvertManager_updateEnumerationStatus(0)
+   if( chargingManager_isCharging ) then
+      call chargingManager_resumeChargingLeds()
+   else
+      call pca9624_blank()
+   end if
+end
+
+
+######## private procedures ########
+
+
+######## system events ########

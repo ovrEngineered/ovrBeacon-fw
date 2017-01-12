@@ -1,3 +1,0 @@
-[submodule "externals/common-c"]
-	path = externals/common-c
-	url = https://github.com/OpenCXA/common-c.git

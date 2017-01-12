@@ -1,0 +1,67 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## private constants ########
+const ADVERT_PERIOD_MS = 1000
+const ADVERT_WINDOW_MS = 1000
+
+const ADV_HEADER_NUM_BYTES = 10
+
+
+######## private variables ########
+dim adv_data(29)                                # custom advertisement data
+dim numUserBytes
+dim advLength_bytes
+
+
+######## public procedures ########
+export procedure advertising_init(devTypeIn, companyIdIn, numUserBytesIn)
+   # initialize our basic data
+   numUserBytes = numUserBytesIn
+
+   # total advert length = (disc/conn + customLength) + header + user bytes
+   advLength_bytes = 4 + ADV_HEADER_NUM_BYTES + numUserBytes
+
+   # flags for discoverable/connectable
+   adv_data(0:1) = $02                                      # ad field length
+   adv_data(1:1) = gap_ad_type_flags                        # ad field type
+   adv_data(2:1) = $06                                      # flags = 0x06, connectable/undirected
+
+   # custom manufacturer
+   adv_data(3:1) = ADV_HEADER_NUM_BYTES + numUserBytes      # ad field length
+   adv_data(4:1) = $ff                                      # ad field type = 0xFF (Manufacturer Specific Data)
+   adv_data(5:1) = (companyIdIn & $ff00) >> 8               # Company Identifier Code - octet 2
+   adv_data(6:1) = (companyIdIn & $00ff) >> 0               # unknown/prototype Company Identifier Code - octet 1
+
+   adv_data(7:1) = devTypeIn
+   call system_address_get()(adv_data(8:6))
+
+   # starting @ adv_data(14:1) set by advertising_setByteAtIndex
+
+   call gap_set_adv_data(0, advLength_bytes, adv_data(0:advLength_bytes))
+
+   # set advertisement interval (all advertisement channels)
+   # min/max parameters are in units of 625 uSec so scale appropriately
+   call gap_set_adv_parameters((ADVERT_PERIOD_MS * 1600) / 1000, ((ADVERT_PERIOD_MS + ADVERT_WINDOW_MS) * 1600) / 1000, $07)
+end
+
+
+export procedure advertising_setByteAtIndex(indexIn, byteIn)
+   adv_data(4+ADV_HEADER_NUM_BYTES+indexIn:1) = byteIn
+
+   # set custom advertisement data
+   call gap_set_adv_data(0, advLength_bytes, adv_data(0:advLength_bytes))
+end
+
+
+export procedure advertising_start()
+   call gap_set_mode(gap_user_data, gap_undirected_connectable)
+end
+
+
+######## system events ########
+event connection_disconnected(handle,result)
+   call advertising_start()
+end

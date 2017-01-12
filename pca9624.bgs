@@ -1,0 +1,137 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## imports ########
+
+
+######## public constants ########
+
+
+######## private constants ########
+const DEV_ADDR = $1E
+
+const LEDEN_PORT_NUM = 1
+const LEDEN_PIN_NUM = 1
+
+
+######## public variables ########
+
+
+######## private variables ########
+dim brightnessAndBlinkingRegs(11)
+dim isSleeping
+
+
+######## public procedures ########
+export procedure pca9624_init()
+   # set some initial values
+   memset(brightnessAndBlinkingRegs(0), 0, 11)
+   brightnessAndBlinkingRegs(9:1) = $ff
+   brightnessAndBlinkingRegs(10:1) = $ff
+
+   # reset the led controller (hardcoded reset address)
+   call hardware_i2c_write($06, 1, 2, "\xA5\x5A")
+
+   # keep in sleep mode
+   # group control is for blinking
+   call hardware_i2c_write(DEV_ADDR, 1, 3, "\x80\x10\x25")
+   isSleeping = 1
+
+   # LED 0, 1, 2, 5, 6, 7 set to individual / group control
+   call hardware_i2c_write(DEV_ADDR, 1, 2, "\x0C\x3F")
+   call hardware_i2c_write(DEV_ADDR, 1, 2, "\x0D\xFC")
+
+   # disable outputs for now
+   call hardware_io_port_write(LEDEN_PORT_NUM, 1 << LEDEN_PIN_NUM, 1)
+   call hardware_io_port_config_direction(LEDEN_PORT_NUM, 1 << LEDEN_PIN_NUM)
+end
+
+
+export procedure pca9624_blank()
+   # register address first (auto-increment)
+   brightnessAndBlinkingRegs(0:1) = $82
+
+   # now led brightnesses
+   brightnessAndBlinkingRegs(1:1) = 0
+   brightnessAndBlinkingRegs(2:1) = 0
+   brightnessAndBlinkingRegs(3:1) = 0
+   brightnessAndBlinkingRegs(6:1) = 0
+   brightnessAndBlinkingRegs(7:1) = 0
+   brightnessAndBlinkingRegs(8:1) = 0
+
+   # 100% duty cycle and period (no blinking)
+   brightnessAndBlinkingRegs(9:1) = $ff
+   brightnessAndBlinkingRegs(10:1) = $ff
+   call hardware_i2c_write(DEV_ADDR, 1, 11, brightnessAndBlinkingRegs(:))
+
+   # put into sleep mode
+   call hardware_i2c_write(DEV_ADDR, 1, 2, "\x00\x10")
+   isSleeping = 1
+
+   # disable outputs
+   call hardware_io_port_write(LEDEN_PORT_NUM, 1 << LEDEN_PIN_NUM, 1)
+end
+
+
+export procedure pca9624_setSolidRgb(rgbValIn())
+   # register address first (auto-increment)
+   brightnessAndBlinkingRegs(0:1) = $82
+
+   # now led brightnesses
+   brightnessAndBlinkingRegs(1:1) = rgbValIn(0:1)
+   brightnessAndBlinkingRegs(2:1) = rgbValIn(1:1)
+   brightnessAndBlinkingRegs(3:1) = rgbValIn(2:1)
+   brightnessAndBlinkingRegs(6:1) = rgbValIn(0:1)
+   brightnessAndBlinkingRegs(7:1) = rgbValIn(1:1)
+   brightnessAndBlinkingRegs(8:1) = rgbValIn(2:1)
+
+   # 100% duty cycle and period (no blinking)
+   brightnessAndBlinkingRegs(9:1) = $ff
+   brightnessAndBlinkingRegs(10:1) = $ff
+   call hardware_i2c_write(DEV_ADDR, 1, 11, brightnessAndBlinkingRegs(:))
+
+   # make sure our oscillator is running
+   if( isSleeping ) then
+      call hardware_i2c_write(DEV_ADDR, 1, 2, "\x00\x00")
+      isSleeping = 0
+   end if
+
+   # enable outputs
+   call hardware_io_port_write(LEDEN_PORT_NUM, 1 << LEDEN_PIN_NUM, 1)
+end
+
+
+export procedure pca9624_blinkRgb(period_msIn, dutyCycle_pcnt100In, rgbValIn())
+   # register address first (auto-increment)
+   brightnessAndBlinkingRegs(0:1) = $82
+
+   # now led brightnesses
+   brightnessAndBlinkingRegs(1:1) = rgbValIn(0:1)
+   brightnessAndBlinkingRegs(2:1) = rgbValIn(1:1)
+   brightnessAndBlinkingRegs(3:1) = rgbValIn(2:1)
+   brightnessAndBlinkingRegs(6:1) = rgbValIn(0:1)
+   brightnessAndBlinkingRegs(7:1) = rgbValIn(1:1)
+   brightnessAndBlinkingRegs(8:1) = rgbValIn(2:1)
+
+   # 100% duty cycle and period (no blinking)
+   brightnessAndBlinkingRegs(9:1) = (dutyCycle_pcnt100In * 256) / 100
+   brightnessAndBlinkingRegs(10:1) = ((period_msIn * 24) / 1000) - 1
+   call hardware_i2c_write(DEV_ADDR, 1, 11, brightnessAndBlinkingRegs(:))
+
+   # make sure our oscillator is running
+   if( isSleeping ) then
+      call hardware_i2c_write(DEV_ADDR, 1, 2, "\x00\x00")
+      isSleeping = 0
+   end if
+
+   # enable outputs
+   call hardware_io_port_write(LEDEN_PORT_NUM, 1 << LEDEN_PIN_NUM, 1)
+end
+
+
+######## private procedures ########
+
+
+######## system events ########

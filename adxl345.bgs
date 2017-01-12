@@ -1,0 +1,72 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## imports ########
+
+
+######## public constants ########
+export const ADXL345_PORT = 1
+export const ADXL345_PINNUM_1 = 4
+export const ADXL345_PINNUM_2 = 5
+
+export const ADXL345_ENUMERATION_TIME_S = 5
+
+
+######## private constants ########
+
+
+######## public variables ########
+
+
+######## private variables ########
+dim result
+dim port
+dim portState
+
+
+######## public procedures ########
+export procedure adxl345_init()
+   # configure for tap detection
+   call hardware_i2c_write($3A, 1, 2, "\x1D\x30")     # thresh_tap
+   call hardware_i2c_write($3A, 1, 2, "\x21\x08")     # duration
+   call hardware_i2c_write($3A, 1, 2, "\x22\xA0")     # latent
+   call hardware_i2c_write($3A, 1, 2, "\x23\xA0")     # window
+   call hardware_i2c_write($3A, 1, 2, "\x2A\x01")     # tap axes
+   call hardware_i2c_write($3A, 1, 2, "\x2D\x09")     # power ctrl
+   call hardware_i2c_write($3A, 1, 2, "\x2F\x20")     # interrupt map
+   call hardware_i2c_write($3A, 1, 2, "\x31\x0A")     # data format
+
+   # gotta read the interrupt register to clear any interrupts
+   call hardware_i2c_write($3A, 0, 1, "\x30")
+   call hardware_i2c_read($3A, 1, 1)
+
+   # Enable GPIO interrupts on rising edge
+   call hardware_io_port_irq_direction(ADXL345_PORT, 0)
+   call hardware_io_port_irq_enable(ADXL345_PORT, (1 << ADXL345_PINNUM_1) | (1 << ADXL345_PINNUM_2))
+   # enable interrupts
+   call hardware_i2c_write($3A, 1, 2, "\x2E\x20")
+end
+
+
+export procedure adxl345_update()
+   call hardware_io_port_read(ADXL345_PORT, (1 << ADXL345_PINNUM_1) | (1 << ADXL345_PINNUM_2))(result, port, portState)
+   if( (portState & (1 << ADXL345_PINNUM_1)) || (portState & (1 << ADXL345_PINNUM_2)) ) then
+      call hardware_i2c_write($3A, 0, 1, "\x30")
+      call hardware_i2c_read($3A, 1, 1)
+   end if
+end
+
+
+export procedure adxl345_handleInterrupt_2()
+   # gotta read the interrupt register to clear the interrupt
+   call hardware_i2c_write($3A, 0, 1, "\x30")
+   call hardware_i2c_read($3A, 1, 1)
+end
+
+
+######## private procedures ########
+
+
+######## system events ########

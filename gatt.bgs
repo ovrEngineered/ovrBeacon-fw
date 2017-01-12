@@ -1,0 +1,32 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## imports ########
+
+
+######## public constants ########
+
+
+######## private constants ########
+
+
+######## public variables ########
+
+
+######## private variables ########
+
+
+######## public procedures ########
+
+
+######## private procedures ########
+
+
+######## system events ########
+event attributes_value(connection, reason, handle, offset, value_len, value_data)
+   if( handle = char_enumRequest ) then
+      call enumerationManager_startEnumeration(value_data(offset:1))
+   end if
+end

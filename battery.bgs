@@ -1,0 +1,67 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## public variables ########
+export dim battery_vbatt_mv
+export dim battery_vbatt_pcnt100
+export dim battery_isUpdated
+
+
+######## private variables ########
+dim adcNum
+
+dim rdiv_r1_ohm               # top resistor
+dim rdiv_r2_ohm               # bottom resistor
+
+dim vbatt_100pcnt_mv
+dim vbatt_0pcnt_mv
+
+
+######## public procedures ########
+export procedure battery_init(adcNumIn, vbatt_100pcnt_mvIn, vbatt_0pcnt_mvIn, rdiv_r1_ohmIn, rdiv_r2_ohmIn)
+   adcNum = adcNumIn
+
+   vbatt_0pcnt_mv = vbatt_0pcnt_mvIn
+   vbatt_100pcnt_mv = vbatt_100pcnt_mvIn
+
+   rdiv_r1_ohm = rdiv_r1_ohmIn
+   rdiv_r2_ohm = rdiv_r2_ohmIn
+
+   battery_isUpdated = 0
+end
+
+
+export procedure battery_update()
+   battery_isUpdated = 0
+
+   # 12-bit, internal 1.24V reference
+   call hardware_adc_read(adcNum, 3, 0)
+end
+
+
+export procedure battery_handleAdcRead(input, value)
+   if input = adcNum then
+      # right-shift the left-justified value
+      battery_vbatt_mv = value / 16
+      # change to millivolts (reference is 1.24, maxval is 2047)
+      battery_vbatt_mv = battery_vbatt_mv * 1240 / 2047
+
+      # now adjust for our voltage divider (if present)
+      if( rdiv_r2_ohm > 0 ) then
+         battery_vbatt_mv = battery_vbatt_mv * (rdiv_r1_ohm + rdiv_r2_ohm) / rdiv_r2_ohm
+      end if
+
+      # convert to a percentage and clamp 0 - 100
+      battery_vbatt_pcnt100 = (100 * (battery_vbatt_mv - vbatt_0pcnt_mv)) / (vbatt_100pcnt_mv - vbatt_0pcnt_mv)
+      if( battery_vbatt_pcnt100 > 100 ) then
+          battery_vbatt_pcnt100 = 100
+      end if
+      if( battery_vbatt_pcnt100 < 0 ) then
+          battery_vbatt_pcnt100 = 0
+      end if
+
+      battery_isUpdated = 1
+   end if
+end

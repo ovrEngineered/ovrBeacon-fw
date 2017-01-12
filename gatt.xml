@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+   <service uuid="1800">
+      <description>Generic Access Profile</description>
+
+      <!-- device name -->
+      <characteristic uuid="2a00">
+        <properties read="true" const="true" />
+        <value>ovrBeacon</value>
+      </characteristic>
+
+      <!-- device appearance -->
+      <characteristic uuid="2a01">
+        <properties read="true" const="true" />
+        <!-- generic tag -->
+        <value type="hex">512</value>
+      </characteristic>
+    </service>
+
+
+    <!-- device information -->
+    <service uuid="180A" id="service_manufacturer">
+      <!-- model number -->
+      <characteristic uuid="2A24">
+         <properties read="true" const="true" />
+         <value>ovrBeacon v0.3</value>
+      </characteristic>
+
+      <!-- manufacturer name -->
+      <characteristic uuid="2A29">
+         <properties read="true" const="true" />
+         <value>ovrEngineered, LLC</value>
+      </characteristic>
+   </service>
+
+
+   <!-- battery -->
+   <service uuid="180F" id="service_battery">
+      <characteristic uuid="2A19" id="char_batt_pcnt100">
+         <properties read="true" write="false" />
+         <value type="hex">00</value>
+      </characteristic>
+   </service>
+
+
+   <!-- ovrBeacon -->
+   <service uuid="9b81950a-7019-40db-94b5-d8d6b463bdb2" id="service_ovrBeacon_tc">
+
+      <!-- enumeration request -->
+      <characteristic uuid="35071611-b529-4984-8fc1-5e363c8e8607" id="char_enumRequest">
+         <description>Enumeration Request</description>
+         <properties read="false" write="true" />
+         <value length="1">00</value>
+      </characteristic>
+   </service>
+
+</configuration>
