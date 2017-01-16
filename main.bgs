@@ -32,6 +32,7 @@ end
 event hardware_io_port_status(timestamp, port, irq, state)
    if( (port = ADXL345_PORT) && (state & (1 << ADXL345_PINNUM_2)) ) then
       call adxl345_handleInterrupt_2()
+      # gotta call this out here because of stack? overflow if call in handleInterrupt
       call enumerationManager_startEnumeration(ADXL345_ENUMERATION_TIME_S)
    end if
 end

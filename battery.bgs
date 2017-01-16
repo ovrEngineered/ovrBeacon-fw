@@ -3,6 +3,9 @@
 #
 
 
+######## private constants ########
+const OFFSET_MV = 60
+
 ######## public variables ########
 export dim battery_vbatt_mv
 export dim battery_vbatt_pcnt100
@@ -52,6 +55,7 @@ export procedure battery_handleAdcRead(input, value)
       if( rdiv_r2_ohm > 0 ) then
          battery_vbatt_mv = battery_vbatt_mv * (rdiv_r1_ohm + rdiv_r2_ohm) / rdiv_r2_ohm
       end if
+      battery_vbatt_mv = battery_vbatt_mv + OFFSET_MV
 
       # convert to a percentage and clamp 0 - 100
       battery_vbatt_pcnt100 = (100 * (battery_vbatt_mv - vbatt_0pcnt_mv)) / (vbatt_100pcnt_mv - vbatt_0pcnt_mv)

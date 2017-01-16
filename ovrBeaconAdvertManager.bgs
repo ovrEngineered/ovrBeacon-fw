@@ -45,12 +45,6 @@ export procedure ovrBeaconAdvertManager_updateBattery_pcnt100(newBatt_pcntIn)
 end
 
 
-export procedure ovrBeaconAdvertManager_updateBattery_mv(batt_mvIn)
-   call advertising_setByteAtIndex(4, (batt_mvIn & $000000ff) >> 0)
-   call advertising_setByteAtIndex(5, (batt_mvIn & $0000ff00) >> 8)
-end
-
-
 export procedure ovrBeaconAdvertManager_updateTemp_degc(temp_degcIn)
    call advertising_setByteAtIndex(2, temp_degcIn)
 end
@@ -58,4 +52,10 @@ end
 
 export procedure ovrBeaconAdvertManager_updateLight(lightIn)
    call advertising_setByteAtIndex(3, (lightIn & $0000ff00) >> 8)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateBattery_mv(batt_mvIn)
+   call advertising_setByteAtIndex(4, (batt_mvIn & $000000ff) >> 0)
+   call advertising_setByteAtIndex(5, (batt_mvIn & $0000ff00) >> 8)
 end

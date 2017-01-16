@@ -14,6 +14,7 @@ const CHARGING_PORT_NUM = 1
 const CHARGING_PIN_NUM = 0
 
 const RGB_CHARGING() = "\x33\x19\x00"
+const RGB_CHARGED() = "\x00\xFF\x00"
 const BLINK_PERIOD_MS = 1500
 const BLINK_DUTYCYCLE_PCNT100 = 5
 
@@ -26,11 +27,13 @@ export dim chargingManager_isCharging
 dim result
 dim port
 dim wasCharging
+dim wasFull
 
 
 ######## public procedures ########
 export procedure chargingManager_init()
    wasCharging = 0
+   wasFull = 0
    chargingManager_isCharging = 0
 end
 
@@ -38,9 +41,20 @@ end
 export procedure chargingManager_update()
    call hardware_io_port_read(CHARGING_PORT_NUM, 1 << CHARGING_PIN_NUM)(result, port, chargingManager_isCharging)
    chargingManager_isCharging = 1 ^ chargingManager_isCharging                           # poor man's NOT
-   if( chargingManager_isCharging & (wasCharging = 0) ) then
-      call ovrBeaconAdvertManager_updateChargingStatus(chargingManager_isCharging)
-      call pca9624_blinkRgb(BLINK_PERIOD_MS, BLINK_DUTYCYCLE_PCNT100, RGB_CHARGING(:))
+
+   if( chargingManager_isCharging ) then
+      if( wasCharging = 0 ) then
+         # we _were not_ charging, now we are...update our led
+         call ovrBeaconAdvertManager_updateChargingStatus(chargingManager_isCharging)
+         wasFull = 0
+         call pca9624_blinkRgb(BLINK_PERIOD_MS, BLINK_DUTYCYCLE_PCNT100, RGB_CHARGING(:))
+      else
+         # we were previously charging...see if we've become full
+         if( (wasFull = 0) && (battery_vbatt_pcnt100 = 100) ) then
+            wasFull = 1
+            call pca9624_blinkRgb(BLINK_PERIOD_MS, BLINK_DUTYCYCLE_PCNT100, RGB_CHARGED(:))
+         end if
+      end if
    end if
    if( (chargingManager_isCharging = 0) & wasCharging ) then
       call ovrBeaconAdvertManager_updateChargingStatus(chargingManager_isCharging)
