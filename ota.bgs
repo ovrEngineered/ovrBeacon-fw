@@ -1,0 +1,78 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## imports ########
+
+
+######## public constants ########
+
+
+######## private constants ########
+const MAX_ERASE_PAGE = 64
+
+
+######## public variables ########
+
+
+######## private variables ########
+dim command
+dim dfu_pointer
+
+
+######## public procedures ########
+export procedure ota_init()
+   # erase internal flash dedicated for OTA
+   dfu_pointer = 0
+   while dfu_pointer < MAX_ERASE_PAGE
+      call flash_erase_page(dfu_pointer)
+      dfu_pointer = dfu_pointer + 1
+   end while
+   dfu_pointer = 0
+end
+
+export procedure ota_handleControl(connection, value_len, value_data())
+   # Check if OTA control point attribute is written by the remote device and execute the command
+      # Command 0 : Erase flash block 0 (0x0-0x1FFFF)
+      # Command 1 : Erase flash block 1 (0x10000-0x3FFFF)
+      # Command 2 : Reset DFU data pointer
+      # Command 3 : Boot to DFU mode
+      # Command 4 : Power up external flash
+   # In case of errors application error code 0x80 is returned to the remote device
+   # In case the flash comms fails error code 0x90 is returned to the remote device
+
+   # Attribute is user attribute, reason is always write_request_user
+   if( value_len > 1 ) then
+      # Not a valid command -> report application error code : 0x80
+      call attributes_user_write_response(connection, $80)
+   else
+      command = value_data(0:1)
+
+      if( command <= 5 ) then
+         if( command = 2 ) then
+            dfu_pointer = 0
+         end if
+         if( command = 3 ) then
+            call system_reset(1)
+         end if
+         # acknowledge
+         call attributes_user_write_response(connection, $0)
+      else
+         # unknown command
+         call attributes_user_write_response(connection, $80)
+      end if
+   end if
+end
+
+
+export procedure ota_handleData(value_len, value_data())
+   call flash_write_data(dfu_pointer, value_len, value_data(0:value_len))
+   dfu_pointer = dfu_pointer + value_len
+end
+
+
+######## private procedures ########
+
+
+######## system events ########

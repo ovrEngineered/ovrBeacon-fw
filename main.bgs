@@ -14,11 +14,15 @@ import "enumerationManager.bgs"
 import "adxl345.bgs"
 import "ltr329.bgs"
 import "sensorManager.bgs"
+import "ota.bgs"
 import "gatt.bgs"
 
 
 ######## system events ########
 event system_boot(major, minor, patch, build, ll_version, protocol_version, hw)
+   # initialize our subsystems
+   call ota_init()
+
    call ovrBeaconAdvertManager_init()
 
    call pca9624_init()
@@ -30,9 +34,16 @@ end
 
 
 event hardware_io_port_status(timestamp, port, irq, state)
-   if( (port = ADXL345_PORT) && (state & (1 << ADXL345_PINNUM_2)) ) then
-      call adxl345_handleInterrupt_2()
+   if( (port = ADXL345_PORT) && (state & (1 << ADXL345_PINNUM_1)) ) then
+      call adxl345_handleInterrupt()
       # gotta call this out here because of stack? overflow if call in handleInterrupt
-      call enumerationManager_startEnumeration(ADXL345_ENUMERATION_TIME_S)
+      #call enumerationManager_startIndefiniteSolidColorEnumeration()
+      call ovrBeaconAdvertManager_updateActivityStatus(1)
+   end if
+   if( (port = ADXL345_PORT) && (state & (1 << ADXL345_PINNUM_2)) ) then
+      call adxl345_handleInterrupt()
+      # gotta call this out here because of stack? overflow if call in handleInterrupt
+      #call enumerationManager_stopEnumeration()
+      call ovrBeaconAdvertManager_updateActivityStatus(0)
    end if
 end

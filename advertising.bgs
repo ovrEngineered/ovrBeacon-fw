@@ -4,8 +4,8 @@
 
 
 ######## private constants ########
-const ADVERT_PERIOD_MS = 1000
-const ADVERT_WINDOW_MS = 1000
+const ADVERT_PERIOD_MS = 3000
+const ADVERT_WINDOW_MS = 2000
 
 const ADV_HEADER_NUM_BYTES = 10
 

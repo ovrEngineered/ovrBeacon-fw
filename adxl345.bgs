@@ -26,8 +26,8 @@ dim port
 dim portState
 
 
-######## public procedures ########
-export procedure adxl345_init()
+######## private procedures ########
+procedure init_doubleTap()
    # configure for tap detection
    call hardware_i2c_write($3A, 1, 2, "\x1D\x30")     # thresh_tap
    call hardware_i2c_write($3A, 1, 2, "\x21\x08")     # duration
@@ -50,6 +50,39 @@ export procedure adxl345_init()
 end
 
 
+procedure init_activity()
+   # configure for activity/inactivity detection
+   call hardware_i2c_write($3A, 1, 2, "\x24\x04")     # thresh_act
+   call hardware_i2c_write($3A, 1, 2, "\x25\x02")     # thresh_inact
+   call hardware_i2c_write($3A, 1, 2, "\x26\x05")     # time_inact
+   #call hardware_i2c_write($3A, 1, 2, "\x27\x77")     # act_inact_ctl
+   call hardware_i2c_write($3A, 1, 2, "\x27\xFF")     # act_inact_ctl
+
+   call hardware_i2c_write($3A, 1, 2, "\x2C\x18")     # bw_rate
+   #call hardware_i2c_write($3A, 1, 2, "\x2D\x39")     # power ctrl
+   call hardware_i2c_write($3A, 1, 2, "\x2D\x29")     # power ctrl
+
+   call hardware_i2c_write($3A, 1, 2, "\x2F\x08")     # interrupt map
+   call hardware_i2c_write($3A, 1, 2, "\x31\x80")     # data format
+
+   # gotta read the interrupt register to clear any interrupts
+   call hardware_i2c_write($3A, 0, 1, "\x30")
+   call hardware_i2c_read($3A, 1, 1)
+
+   # Enable GPIO interrupts on rising edge
+   call hardware_io_port_irq_direction(ADXL345_PORT, 0)
+   call hardware_io_port_irq_enable(ADXL345_PORT, (1 << ADXL345_PINNUM_1) | (1 << ADXL345_PINNUM_2))
+   # enable interrupts
+   call hardware_i2c_write($3A, 1, 2, "\x2E\x18")
+end
+
+
+######## public procedures ########
+export procedure adxl345_init()
+   call init_activity()
+end
+
+
 export procedure adxl345_update()
    call hardware_io_port_read(ADXL345_PORT, (1 << ADXL345_PINNUM_1) | (1 << ADXL345_PINNUM_2))(result, port, portState)
    if( (portState & (1 << ADXL345_PINNUM_1)) || (portState & (1 << ADXL345_PINNUM_2)) ) then
@@ -59,14 +92,11 @@ export procedure adxl345_update()
 end
 
 
-export procedure adxl345_handleInterrupt_2()
+export procedure adxl345_handleInterrupt()
    # gotta read the interrupt register to clear the interrupt
    call hardware_i2c_write($3A, 0, 1, "\x30")
    call hardware_i2c_read($3A, 1, 1)
 end
-
-
-######## private procedures ########
 
 
 ######## system events ########

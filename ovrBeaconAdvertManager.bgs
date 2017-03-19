@@ -39,6 +39,11 @@ export procedure ovrBeaconAdvertManager_updateEnumerationStatus(isEnumeratingIn)
    call advertising_setByteAtIndex(0, statusByte)
 end
 
+export procedure ovrBeaconAdvertManager_updateActivityStatus(isActiveIn)
+   statusByte = statusByte & $DF | (isActiveIn << 5)
+   call advertising_setByteAtIndex(0, statusByte)
+end
+
 
 export procedure ovrBeaconAdvertManager_updateBattery_pcnt100(newBatt_pcntIn)
    call advertising_setByteAtIndex(1, newBatt_pcntIn)

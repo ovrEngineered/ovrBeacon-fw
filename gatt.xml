@@ -23,7 +23,7 @@
       <!-- model number -->
       <characteristic uuid="2A24">
          <properties read="true" const="true" />
-         <value>ovrBeacon v0.3</value>
+         <value>ovrBeacon v0.4</value>
       </characteristic>
 
       <!-- manufacturer name -->
@@ -45,6 +45,7 @@
 
    <!-- ovrBeacon -->
    <service uuid="9b81950a-7019-40db-94b5-d8d6b463bdb2" id="service_ovrBeacon_tc">
+      <description>ovrBeacon Service</description>
 
       <!-- enumeration request -->
       <characteristic uuid="35071611-b529-4984-8fc1-5e363c8e8607" id="char_enumRequest">
@@ -53,5 +54,23 @@
          <value length="1">00</value>
       </characteristic>
    </service>
+
+
+   <!-- otaUpdateService -->
+   <service uuid="1d14d6ee-fd63-4fa1-bfa4-8f47b42119f0">
+      <description>OTA Service</description>
+
+      <!-- Standard OTA endpoints for BLEGUI to work -->
+      <characteristic uuid="f7bf3564-fb6d-4e53-88a4-5e37e0326063" id="char_otaControl">
+         <description>OTA Control</description>
+         <properties write="true" />
+         <value length="1" type="user" />
+      </characteristic>
+      <characteristic uuid="984227f3-34fc-4045-a5d0-2c581f81a153" id="char_otaData">
+         <description>OTA Data</description>
+         <properties write="true" write_no_response="true" />
+         <value length="20" />
+      </characteristic>
+    </service>
 
 </configuration>

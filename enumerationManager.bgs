@@ -13,7 +13,9 @@ export const ENUMMAN_TIMERHANDLE_ENUMCOMPLETE = 1
 ######## private constants ########
 const BLINK_PERIOD_MS = 500
 const BLINK_DUTYCYCLE_PCNT100 = 75
-const RGB_ENUMERATION() = "\x00\x00\xFF"
+
+const RGB_ENUMERATION() = "\xFF\xFF\xFF"
+#const RGB_ENUMERATION() = "\x00\x00\xFF"
 
 
 ######## public variables ########
@@ -27,6 +29,12 @@ export procedure enumerationManager_startEnumeration(time_sIn)
    call ovrBeaconAdvertManager_updateEnumerationStatus(1)
    call pca9624_blinkRgb(BLINK_PERIOD_MS, BLINK_DUTYCYCLE_PCNT100, RGB_ENUMERATION(:))
    call hardware_set_soft_timer(time_sIn * 32768, ENUMMAN_TIMERHANDLE_ENUMCOMPLETE, 1)
+end
+
+
+export procedure enumerationManager_startIndefiniteSolidColorEnumeration()
+   call ovrBeaconAdvertManager_updateEnumerationStatus(1)
+   call pca9624_setSolidRgb(RGB_ENUMERATION(:))
 end
 
 
