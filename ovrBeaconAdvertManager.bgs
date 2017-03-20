@@ -18,7 +18,6 @@ dim statusByte
 
 ######## public procedures ########
 export procedure ovrBeaconAdvertManager_init()
-   call advertising_init(DEV_TYPE, COMPANY_ID, NUM_USER_BYTES)
    statusByte = 0
 end
 
@@ -29,18 +28,37 @@ end
 
 
 export procedure ovrBeaconAdvertManager_updateChargingStatus(isChargingIn)
-   statusByte = statusByte & $7F | (isChargingIn << 7)
+   statusByte = statusByte & ($FF - (1 << 7)) | (isChargingIn << 7)
    call advertising_setByteAtIndex(0, statusByte)
 end
 
 
 export procedure ovrBeaconAdvertManager_updateEnumerationStatus(isEnumeratingIn)
-   statusByte = statusByte & $BF | (isEnumeratingIn << 6)
+   statusByte = statusByte & ($FF - (1 << 6)) | (isEnumeratingIn << 6)
    call advertising_setByteAtIndex(0, statusByte)
 end
 
+
 export procedure ovrBeaconAdvertManager_updateActivityStatus(isActiveIn)
-   statusByte = statusByte & $DF | (isActiveIn << 5)
+   statusByte = statusByte & ($FF - (1 << 5)) | (isActiveIn << 5)
+   call advertising_setByteAtIndex(0, statusByte)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateAccelEnabled(isEnabledIn)
+   statusByte = statusByte & ($FF - (1 << 2)) | (isEnabledIn << 2)
+   call advertising_setByteAtIndex(0, statusByte)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateTempEnabled(isEnabledIn)
+   statusByte = statusByte & ($FF - (1 << 1)) | (isEnabledIn << 1)
+   call advertising_setByteAtIndex(0, statusByte)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateLightEnabled(isEnabledIn)
+   statusByte = statusByte & ($FF - (1 << 0)) | (isEnabledIn << 0)
    call advertising_setByteAtIndex(0, statusByte)
 end
 
@@ -56,7 +74,7 @@ end
 
 
 export procedure ovrBeaconAdvertManager_updateLight(lightIn)
-   call advertising_setByteAtIndex(3, (lightIn & $0000ff00) >> 8)
+   call advertising_setByteAtIndex(3, lightIn)
 end
 
 

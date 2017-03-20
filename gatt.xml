@@ -20,16 +20,28 @@
 
     <!-- device information -->
     <service uuid="180A" id="service_manufacturer">
-      <!-- model number -->
-      <characteristic uuid="2A24">
-         <properties read="true" const="true" />
-         <value>ovrBeacon v0.4</value>
-      </characteristic>
-
       <!-- manufacturer name -->
       <characteristic uuid="2A29">
          <properties read="true" const="true" />
          <value>ovrEngineered, LLC</value>
+      </characteristic>
+
+      <!-- model number -->
+      <characteristic uuid="2A24">
+         <properties read="true" const="true" />
+         <value>ovrBeacon</value>
+      </characteristic>
+
+      <!-- hardware revision -->
+      <characteristic uuid="2A27" id="char_hardwareRev">
+         <properties read="true" const="true" />
+         <value>0.4</value>
+      </characteristic>
+
+      <!-- firmware revision -->
+      <characteristic uuid="2A26">
+         <properties read="true" const="true" />
+         <value>0.5</value>
       </characteristic>
    </service>
 
@@ -47,11 +59,28 @@
    <service uuid="9b81950a-7019-40db-94b5-d8d6b463bdb2" id="service_ovrBeacon_tc">
       <description>ovrBeacon Service</description>
 
-      <!-- enumeration request -->
+      <characteristic uuid="1dab553d-e888-43f5-9c26-0ac876270f6c" id="char_isCharging">
+         <description>Is Charging?</description>
+         <properties read="true" />
+         <value type="hex">00</value>
+      </characteristic>
+
       <characteristic uuid="35071611-b529-4984-8fc1-5e363c8e8607" id="char_enumRequest">
          <description>Enumeration Request</description>
          <properties read="false" write="true" />
          <value length="1">00</value>
+      </characteristic>
+
+      <characteristic uuid="157ce8f6-157e-4dd3-8f7a-33f7cd47860c" id="char_lightSnsEnabled">
+         <description>Light Sensor Enabled</description>
+         <properties read="true" write="true" />
+         <value type="hex">00</value>
+      </characteristic>
+
+      <characteristic uuid="cb947399-70c1-41a1-8ae3-c122f1fbdc92" id="char_lightValue">
+         <description>Light Value (0-255)</description>
+         <properties read="true" write="false"/>
+         <value type="hex">00</value>
       </characteristic>
    </service>
 

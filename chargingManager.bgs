@@ -10,8 +10,8 @@
 
 
 ######## private constants ########
-const CHARGING_PORT_NUM = 1
-const CHARGING_PIN_NUM = 0
+const CHARGING_PORT_NUM = 0
+const CHARGING_PIN_NUM = 7
 
 const RGB_CHARGING() = "\x33\x19\x00"
 const RGB_CHARGED() = "\x00\xFF\x00"
@@ -40,7 +40,9 @@ end
 
 export procedure chargingManager_update()
    call hardware_io_port_read(CHARGING_PORT_NUM, 1 << CHARGING_PIN_NUM)(result, port, chargingManager_isCharging)
-   chargingManager_isCharging = 1 ^ chargingManager_isCharging                           # poor man's NOT
+   chargingManager_isCharging = 1 ^ ((chargingManager_isCharging & (1 << CHARGING_PIN_NUM)) >> CHARGING_PIN_NUM)
+
+   call attributes_write(char_isCharging, 0, 1, chargingManager_isCharging)
 
    if( chargingManager_isCharging ) then
       if( wasCharging = 0 ) then

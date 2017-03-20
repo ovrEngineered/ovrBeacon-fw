@@ -14,30 +14,50 @@ dim result
 dim data_len
 dim data(1)
 
-dim lightVal
+dim lightVal_255
 
 
 ######## public procedures ########
 export procedure ltr329_init()
-   # bring out of standby, set gain
-   call hardware_i2c_write($52, 1, 2, "\x80\x0D")
+   if( PS_IS_LIGHT_ENABLED ) then
+      # bring out of standby, set gain
+      call hardware_i2c_write($52, 1, 2, "\x80\x0D")
+   else
+      # put into standby mode
+      call hardware_i2c_write($52, 1, 2, "\x80\x00")
+   end if
+
+   # set some initial values
+   lightVal_255 = 0
+end
+
+
+export procedure ltr329_setEnabled(isEnabledIn)
+   call persistentStore_setLightEnabled(isEnabledIn)
+   call ltr329_init()
+   call ovrBeaconAdvertManager_updateLight(0)
+   call ovrBeaconAdvertManager_updateLightEnabled(isEnabledIn)
 end
 
 
 export procedure ltr329_update()
-   # read channel 1 (infra-red)
-   call hardware_i2c_write($52, 0, 1, "\x88")
-   call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
-   call hardware_i2c_write($52, 0, 1, "\x89")
-   call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
+   if( PS_IS_LIGHT_ENABLED ) then
+      # read channel 1 (infra-red)
+      call hardware_i2c_write($52, 0, 1, "\x88")
+      call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
+      call hardware_i2c_write($52, 0, 1, "\x89")
+      call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
 
-   # read channel 2 (visible)
-   call hardware_i2c_write($52, 0, 1, "\x8A")
-   call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
-   lightVal = (data(0:1) << 8)
-   call hardware_i2c_write($52, 0, 1, "\x8B")
-   call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
-   lightVal = lightVal | (data(0:1) << 0)
+      # read channel 2 (visible)
+      call hardware_i2c_write($52, 0, 1, "\x8A")
+      call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
+      lightVal_255 = data(0:1)
+      # we don't care about the lower byte...
+      call hardware_i2c_write($52, 0, 1, "\x8B")
+      call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
 
-   call ovrBeaconAdvertManager_updateLight(lightVal)
+      call attributes_write(char_lightValue, 0, 1, lightVal_255)
+      call ovrBeaconAdvertManager_updateLight(lightVal_255)
+      call ovrBeaconAdvertManager_updateLightEnabled(PS_IS_LIGHT_ENABLED)
+   end if
 end

@@ -1,0 +1,68 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## imports ########
+
+
+######## public constants ########
+
+
+######## private constants ########
+#const KEY_HW_REV = $8000
+const KEY_LIGHT_ENABLED = $8001
+
+#const DEFAULT_HW_REV() = "0.5"
+#const UNSET_HW_REV()   = "???"
+#const HW_REV_LEN = 3
+
+
+######## public variables ########
+export dim PS_IS_LIGHT_ENABLED
+
+
+######## private variables ########
+dim result, value_len
+dim value_data(3)
+
+
+######## public procedures ########
+export procedure persistentStore_init()
+   # make sure we have all of our defaults set
+   #call flash_ps_load(KEY_HW_REV)(result, value_len, value_data(:))
+   #if( result != 0 ) then
+   #   call flash_ps_save(KEY_HW_REV, HW_REV_LEN, DEFAULT_HW_REV(:))
+   #end if
+
+   # read our initial states
+   call flash_ps_load(KEY_LIGHT_ENABLED)(result, value_len, value_data(:))
+   if( result = 0 ) then
+      PS_IS_LIGHT_ENABLED = value_data(0:1)
+   else
+      PS_IS_LIGHT_ENABLED = 0
+   end if
+end
+
+
+export procedure persistentStore_handleHardwareRevRead(connectionIn)
+   #call flash_ps_load(KEY_HW_REV)(result, value_len, value_data(:))
+   #if( result = 0 ) then
+   #   call attributes_user_read_response(connectionIn, 0, value_len, value_data(0:value_len))
+   #else
+      # don't have a HW revision set...let the reader know nicely
+   #   call attributes_user_read_response(connectionIn, 0, HW_REV_LEN, UNSET_HW_REV(0:HW_REV_LEN))
+   #end if
+end
+
+
+export procedure persistentStore_setLightEnabled(isEnabledIn)
+   call flash_ps_save(KEY_LIGHT_ENABLED, 1, isEnabledIn)
+   PS_IS_LIGHT_ENABLED = isEnabledIn
+end
+
+
+######## private procedures ########
+
+
+######## system events ########

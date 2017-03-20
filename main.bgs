@@ -4,6 +4,7 @@
 
 
 ######## imports ########
+import "persistentStore.bgs"
 import "advertising.bgs"
 import "ovrBeaconAdvertManager.bgs"
 import "battery.bgs"
@@ -21,6 +22,8 @@ import "gatt.bgs"
 ######## system events ########
 event system_boot(major, minor, patch, build, ll_version, protocol_version, hw)
    # initialize our subsystems
+   call persistentStore_init()
+
    call ota_init()
 
    call ovrBeaconAdvertManager_init()
@@ -30,6 +33,7 @@ event system_boot(major, minor, patch, build, ll_version, protocol_version, hw)
    call sensorManager_init()
 
    call ovrBeaconAdvertManager_start()
+   call pca9624_setSolidRgb("\x00\x07\x00")
 end
 
 
@@ -37,7 +41,6 @@ event hardware_io_port_status(timestamp, port, irq, state)
    if( (port = ADXL345_PORT) && (state & (1 << ADXL345_PINNUM_1)) ) then
       call adxl345_handleInterrupt()
       # gotta call this out here because of stack? overflow if call in handleInterrupt
-      #call enumerationManager_startIndefiniteSolidColorEnumeration()
       call ovrBeaconAdvertManager_updateActivityStatus(1)
    end if
    if( (port = ADXL345_PORT) && (state & (1 << ADXL345_PINNUM_2)) ) then
@@ -45,5 +48,12 @@ event hardware_io_port_status(timestamp, port, irq, state)
       # gotta call this out here because of stack? overflow if call in handleInterrupt
       #call enumerationManager_stopEnumeration()
       call ovrBeaconAdvertManager_updateActivityStatus(0)
+   end if
+end
+
+
+event connection_status(connection, flags, address, address_type, conn_interval, timeout, latency, bonding)
+   if( flags & (1 << 2) ) then
+      call pca9624_blank()
    end if
 end

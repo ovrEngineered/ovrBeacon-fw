@@ -32,12 +32,6 @@ export procedure enumerationManager_startEnumeration(time_sIn)
 end
 
 
-export procedure enumerationManager_startIndefiniteSolidColorEnumeration()
-   call ovrBeaconAdvertManager_updateEnumerationStatus(1)
-   call pca9624_setSolidRgb(RGB_ENUMERATION(:))
-end
-
-
 export procedure enumerationManager_stopEnumeration()
    call ovrBeaconAdvertManager_updateEnumerationStatus(0)
    if( chargingManager_isCharging ) then
