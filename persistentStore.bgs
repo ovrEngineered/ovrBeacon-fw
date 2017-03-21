@@ -11,7 +11,10 @@
 
 ######## private constants ########
 #const KEY_HW_REV = $8000
-const KEY_LIGHT_ENABLED = $8001
+const KEY_LIGHT_SNS_ENABLED = $8001
+const KEY_ENUM_COLOR_RGB = $8002
+
+const DEFAULT_ENUM_COLOR_RGB() = "\xFF\xFF\xFF"
 
 #const DEFAULT_HW_REV() = "0.5"
 #const UNSET_HW_REV()   = "???"
@@ -20,6 +23,9 @@ const KEY_LIGHT_ENABLED = $8001
 
 ######## public variables ########
 export dim PS_IS_LIGHT_ENABLED
+
+export dim PS_ENUM_COLOR_RGB(3)
+export const PS_ENUM_COLOR_RGB_LEN = 3
 
 
 ######## private variables ########
@@ -36,11 +42,24 @@ export procedure persistentStore_init()
    #end if
 
    # read our initial states
-   call flash_ps_load(KEY_LIGHT_ENABLED)(result, value_len, value_data(:))
+   call flash_ps_load(KEY_LIGHT_SNS_ENABLED)(result, value_len, value_data(0:1))
    if( result = 0 ) then
       PS_IS_LIGHT_ENABLED = value_data(0:1)
    else
       PS_IS_LIGHT_ENABLED = 0
+   end if
+
+   call flash_ps_load(KEY_ENUM_COLOR_RGB)(result, value_len, value_data(0:PS_ENUM_COLOR_RGB_LEN))
+   if( result = 0 ) then
+      PS_ENUM_COLOR_RGB(0:1) = value_data(0:1)
+      PS_ENUM_COLOR_RGB(1:1) = value_data(1:1)
+      PS_ENUM_COLOR_RGB(2:1) = value_data(2:1)
+   end if
+   #else
+   if( result != 0 ) then
+      PS_ENUM_COLOR_RGB(0:1) = DEFAULT_ENUM_COLOR_RGB(0:1)
+      PS_ENUM_COLOR_RGB(1:1) = DEFAULT_ENUM_COLOR_RGB(1:1)
+      PS_ENUM_COLOR_RGB(2:1) = DEFAULT_ENUM_COLOR_RGB(2:1)
    end if
 end
 
@@ -57,8 +76,17 @@ end
 
 
 export procedure persistentStore_setLightEnabled(isEnabledIn)
-   call flash_ps_save(KEY_LIGHT_ENABLED, 1, isEnabledIn)
+   call flash_ps_save(KEY_LIGHT_SNS_ENABLED, 1, isEnabledIn)
    PS_IS_LIGHT_ENABLED = isEnabledIn
+end
+
+
+export procedure persistentStore_setEnumColorRgb(rgbIn())
+   call flash_ps_save(KEY_ENUM_COLOR_RGB, PS_ENUM_COLOR_RGB_LEN, rgbIn(0:PS_ENUM_COLOR_RGB_LEN))
+
+   PS_ENUM_COLOR_RGB(0:1) = rgbIn(0:1)
+   PS_ENUM_COLOR_RGB(1:1) = rgbIn(1:1)
+   PS_ENUM_COLOR_RGB(2:1) = rgbIn(2:1)
 end
 
 

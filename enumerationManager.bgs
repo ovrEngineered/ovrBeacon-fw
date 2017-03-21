@@ -11,11 +11,15 @@ export const ENUMMAN_TIMERHANDLE_ENUMCOMPLETE = 1
 
 
 ######## private constants ########
+const ALERT_LEVEL_NONE = 0
+const ALERT_LEVEL_LOW = 1
+const ALERT_LEVEL_HIGH = 2
+
+const ALERT_TIME_LOW = 5
+const ALERT_TIME_HIGH = 30
+
 const BLINK_PERIOD_MS = 500
 const BLINK_DUTYCYCLE_PCNT100 = 75
-
-const RGB_ENUMERATION() = "\xFF\xFF\xFF"
-#const RGB_ENUMERATION() = "\x00\x00\xFF"
 
 
 ######## public variables ########
@@ -25,10 +29,8 @@ const RGB_ENUMERATION() = "\xFF\xFF\xFF"
 
 
 ######## public procedures ########
-export procedure enumerationManager_startEnumeration(time_sIn)
-   call ovrBeaconAdvertManager_updateEnumerationStatus(1)
-   call pca9624_blinkRgb(BLINK_PERIOD_MS, BLINK_DUTYCYCLE_PCNT100, RGB_ENUMERATION(:))
-   call hardware_set_soft_timer(time_sIn * 32768, ENUMMAN_TIMERHANDLE_ENUMCOMPLETE, 1)
+export procedure enumerationManager_init()
+   call attributes_write(char_alertColor, 0, 3, PS_ENUM_COLOR_RGB(0:PS_ENUM_COLOR_RGB_LEN))
 end
 
 
@@ -38,6 +40,31 @@ export procedure enumerationManager_stopEnumeration()
       call chargingManager_resumeChargingLeds()
    else
       call pca9624_blank()
+   end if
+end
+
+
+export procedure enumerationManager_setEnumerationColorRgb(rgbIn())
+   call persistentStore_setEnumColorRgb(rgbIn(0:PS_ENUM_COLOR_RGB_LEN))
+end
+
+
+export procedure enumerationManager_startEnumeration(alertLevelIn)
+   if( alertLevelIn = ALERT_LEVEL_NONE ) then
+      call enumerationManager_stopEnumeration()
+      return
+   end if
+   if( alertLevelIn = ALERT_LEVEL_LOW ) then
+      call ovrBeaconAdvertManager_updateEnumerationStatus(1)
+      call pca9624_blinkRgb(BLINK_PERIOD_MS, BLINK_DUTYCYCLE_PCNT100, PS_ENUM_COLOR_RGB(:))
+      call hardware_set_soft_timer(ALERT_TIME_LOW * 32768, ENUMMAN_TIMERHANDLE_ENUMCOMPLETE, 1)
+      return
+   end if
+   if( alertLevelIn = ALERT_LEVEL_HIGH ) then
+      call ovrBeaconAdvertManager_updateEnumerationStatus(1)
+      call pca9624_blinkRgb(BLINK_PERIOD_MS, BLINK_DUTYCYCLE_PCNT100, PS_ENUM_COLOR_RGB(:))
+      call hardware_set_soft_timer(ALERT_TIME_HIGH * 32768, ENUMMAN_TIMERHANDLE_ENUMCOMPLETE, 1)
+      return
    end if
 end
 

@@ -26,8 +26,11 @@
 
 ######## system events ########
 event attributes_value(connection, reason, handle, offset, value_len, value_data)
-   if( handle = char_enumRequest ) then
+   if( handle = char_alertLevel ) then
       call enumerationManager_startEnumeration(value_data(offset:1))
+   end if
+   if( (handle = char_alertColor) && (value_len = PS_ENUM_COLOR_RGB_LEN) ) then
+      call enumerationManager_setEnumerationColorRgb(value_data(0:value_len))
    end if
    if( handle = char_otaControl ) then
       call ota_handleControl(connection, value_len, value_data(offset:value_len))

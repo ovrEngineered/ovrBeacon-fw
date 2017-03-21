@@ -29,6 +29,7 @@ export procedure ltr329_init()
 
    # set some initial values
    lightVal_255 = 0
+   call attributes_write(char_lightSnsEnabled, 0, 1, PS_IS_LIGHT_ENABLED)
 end
 
 

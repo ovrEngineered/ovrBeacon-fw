@@ -29,6 +29,8 @@ event system_boot(major, minor, patch, build, ll_version, protocol_version, hw)
    call ovrBeaconAdvertManager_init()
 
    call pca9624_init()
+   call enumerationManager_init()
+
    call chargingManager_init()
    call sensorManager_init()
 

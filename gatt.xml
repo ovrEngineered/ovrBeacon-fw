@@ -3,52 +3,62 @@
    <service uuid="1800">
       <description>Generic Access Profile</description>
 
-      <!-- device name -->
       <characteristic uuid="2a00">
-        <properties read="true" const="true" />
-        <value>ovrBeacon</value>
-      </characteristic>
-
-      <!-- device appearance -->
-      <characteristic uuid="2a01">
-        <properties read="true" const="true" />
-        <!-- generic tag -->
-        <value type="hex">512</value>
-      </characteristic>
-    </service>
-
-
-    <!-- device information -->
-    <service uuid="180A" id="service_manufacturer">
-      <!-- manufacturer name -->
-      <characteristic uuid="2A29">
-         <properties read="true" const="true" />
-         <value>ovrEngineered, LLC</value>
-      </characteristic>
-
-      <!-- model number -->
-      <characteristic uuid="2A24">
+         <description>Device Name</description>
          <properties read="true" const="true" />
          <value>ovrBeacon</value>
       </characteristic>
 
-      <!-- hardware revision -->
+      <characteristic uuid="2a01">
+         <description>Appearance</description>
+         <properties read="true" const="true" />
+         <value type="hex">512</value>   <!-- generic tag -->
+      </characteristic>
+    </service>
+
+    <service uuid="1802" id="service_immediateAlert">
+      <description>Immediate Alert</description>
+
+      <characteristic uuid="2A06" id="char_alertLevel">
+         <description>Alert Level</description>
+         <properties read="false" write="true" />
+         <value length="1">00</value>
+      </characteristic>
+
+      <characteristic uuid="a50b7271-ab38-444a-bb7f-324a13c7f378" id="char_alertColor">
+         <description>Alert Color (RGB)</description>
+         <properties read="true" write="true" />
+         <value length="3" type="hex">FFFFFF</value>
+      </characteristic>
+    </service>
+
+    <service uuid="180A" id="service_manufacturer">
+      <description>Device Information</description>
+
+      <characteristic uuid="2A29">
+         <description>Manufacturer Name</description>
+         <properties read="true" const="true" />
+         <value>ovrEngineered, LLC</value>
+      </characteristic>
+
       <characteristic uuid="2A27" id="char_hardwareRev">
+         <description>Hardware Revision</description>
          <properties read="true" const="true" />
          <value>0.4</value>
       </characteristic>
 
-      <!-- firmware revision -->
       <characteristic uuid="2A26">
+         <description>Firmware Revision</description>
          <properties read="true" const="true" />
          <value>0.5</value>
       </characteristic>
    </service>
 
 
-   <!-- battery -->
    <service uuid="180F" id="service_battery">
+      <description>Battery</description>
       <characteristic uuid="2A19" id="char_batt_pcnt100">
+         <description>Battery Level</description>
          <properties read="true" write="false" />
          <value type="hex">00</value>
       </characteristic>
@@ -63,12 +73,6 @@
          <description>Is Charging?</description>
          <properties read="true" />
          <value type="hex">00</value>
-      </characteristic>
-
-      <characteristic uuid="35071611-b529-4984-8fc1-5e363c8e8607" id="char_enumRequest">
-         <description>Enumeration Request</description>
-         <properties read="false" write="true" />
-         <value length="1">00</value>
       </characteristic>
 
       <characteristic uuid="157ce8f6-157e-4dd3-8f7a-33f7cd47860c" id="char_lightSnsEnabled">
