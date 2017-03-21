@@ -12,7 +12,8 @@
 ######## private constants ########
 #const KEY_HW_REV = $8000
 const KEY_LIGHT_SNS_ENABLED = $8001
-const KEY_ENUM_COLOR_RGB = $8002
+const KEY_TEMP_SNS_ENABLED = $8002
+const KEY_ENUM_COLOR_RGB = $8004
 
 const DEFAULT_ENUM_COLOR_RGB() = "\xFF\xFF\xFF"
 
@@ -23,6 +24,7 @@ const DEFAULT_ENUM_COLOR_RGB() = "\xFF\xFF\xFF"
 
 ######## public variables ########
 export dim PS_IS_LIGHT_ENABLED
+export dim PS_IS_TEMP_ENABLED
 
 export dim PS_ENUM_COLOR_RGB(3)
 export const PS_ENUM_COLOR_RGB_LEN = 3
@@ -36,6 +38,9 @@ dim value_data(3)
 ######## public procedures ########
 export procedure persistentStore_init()
    # make sure we have all of our defaults set
+   # Note: having (stack?) problems w/ else so broke 'else' statements
+   #       into two 'if' statements
+
    #call flash_ps_load(KEY_HW_REV)(result, value_len, value_data(:))
    #if( result != 0 ) then
    #   call flash_ps_save(KEY_HW_REV, HW_REV_LEN, DEFAULT_HW_REV(:))
@@ -45,8 +50,17 @@ export procedure persistentStore_init()
    call flash_ps_load(KEY_LIGHT_SNS_ENABLED)(result, value_len, value_data(0:1))
    if( result = 0 ) then
       PS_IS_LIGHT_ENABLED = value_data(0:1)
-   else
+   end if
+   if( result != 0 ) then
       PS_IS_LIGHT_ENABLED = 0
+   end if
+
+   call flash_ps_load(KEY_TEMP_SNS_ENABLED)(result, value_len, value_data(0:1))
+   if( result = 0 ) then
+      PS_IS_TEMP_ENABLED = value_data(0:1)
+   end if
+   if( result != 0 ) then
+      PS_IS_TEMP_ENABLED = 0
    end if
 
    call flash_ps_load(KEY_ENUM_COLOR_RGB)(result, value_len, value_data(0:PS_ENUM_COLOR_RGB_LEN))
@@ -55,7 +69,6 @@ export procedure persistentStore_init()
       PS_ENUM_COLOR_RGB(1:1) = value_data(1:1)
       PS_ENUM_COLOR_RGB(2:1) = value_data(2:1)
    end if
-   #else
    if( result != 0 ) then
       PS_ENUM_COLOR_RGB(0:1) = DEFAULT_ENUM_COLOR_RGB(0:1)
       PS_ENUM_COLOR_RGB(1:1) = DEFAULT_ENUM_COLOR_RGB(1:1)
@@ -78,6 +91,12 @@ end
 export procedure persistentStore_setLightEnabled(isEnabledIn)
    call flash_ps_save(KEY_LIGHT_SNS_ENABLED, 1, isEnabledIn)
    PS_IS_LIGHT_ENABLED = isEnabledIn
+end
+
+
+export procedure persistentStore_setTempEnabled(isEnabledIn)
+   call flash_ps_save(KEY_TEMP_SNS_ENABLED, 1, isEnabledIn)
+   PS_IS_TEMP_ENABLED = isEnabledIn
 end
 
 

@@ -22,7 +22,7 @@
       <characteristic uuid="2A06" id="char_alertLevel">
          <description>Alert Level</description>
          <properties read="false" write="true" />
-         <value length="1">00</value>
+         <value length="1" type="hex">00</value>
       </characteristic>
 
       <characteristic uuid="a50b7271-ab38-444a-bb7f-324a13c7f378" id="char_alertColor">
@@ -78,13 +78,25 @@
       <characteristic uuid="157ce8f6-157e-4dd3-8f7a-33f7cd47860c" id="char_lightSnsEnabled">
          <description>Light Sensor Enabled</description>
          <properties read="true" write="true" />
-         <value type="hex">00</value>
+         <value length="1" type="hex">00</value>
       </characteristic>
 
       <characteristic uuid="cb947399-70c1-41a1-8ae3-c122f1fbdc92" id="char_lightValue">
          <description>Light Value (0-255)</description>
          <properties read="true" write="false"/>
          <value type="hex">00</value>
+      </characteristic>
+
+      <characteristic uuid="463fca74-472a-48ea-9b9a-8fa7d271d524" id="char_tempSnsEnabled">
+         <description>Temp. Sensor Enabled</description>
+         <properties read="true" write="true" />
+         <value length="1" type="hex">00</value>
+      </characteristic>
+
+      <characteristic uuid="9756858b-2496-4f6f-b155-a36f5a067781" id="char_tempValue_ddc">
+         <description>Temp. (deci C)</description>
+         <properties read="true" />
+         <value length="2" type="hex">0000</value>
       </characteristic>
    </service>
 

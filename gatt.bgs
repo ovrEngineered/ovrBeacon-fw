@@ -41,4 +41,7 @@ event attributes_value(connection, reason, handle, offset, value_len, value_data
    if( handle = char_lightSnsEnabled ) then
       call ltr329_setEnabled(value_data(0:1))
    end if
+   if( handle = char_tempSnsEnabled ) then
+      call si7050_setEnabled(value_data(0:1))
+   end if
 end

@@ -18,16 +18,34 @@ dim temp_deciDegC
 
 ######## public procedures ########
 export procedure si7050_init()
+   # set some initial values
    temp_deciDegC = 0
+   call attributes_write(char_tempSnsEnabled, 0, 1, PS_IS_TEMP_ENABLED)
+   data(0:1) = (temp_deciDegC & $0000FF00) >> 8
+   data(1:1) = (temp_deciDegC & $000000FF) >> 0
+   call attributes_write(char_tempValue_ddc, 0, 2, data(0:2))
+   call ovrBeaconAdvertManager_updateTemp_degc(temp_deciDegC)
+   call ovrBeaconAdvertManager_updateTempEnabled(PS_IS_TEMP_ENABLED)
+end
+
+
+export procedure si7050_setEnabled(isEnabledIn)
+   call persistentStore_setTempEnabled(isEnabledIn)
+   call si7050_init()
 end
 
 
 export procedure si7050_update()
-   call hardware_i2c_write($80, 0, 1, "\xE3")
-   call hardware_i2c_read($80, 1, 2)(result, data_len, data(:))
+   if( PS_IS_TEMP_ENABLED ) then
+      call hardware_i2c_write($80, 0, 1, "\xE3")
+      call hardware_i2c_read($80, 1, 2)(result, data_len, data(:))
 
-   temp_deciDegC = (data(0:1) << 8) | (data(1:1) << 0)
-   temp_deciDegC = ((temp_deciDegC * 1757) / 65536) - 469
+      temp_deciDegC = (data(0:1) << 8) | (data(1:1) << 0)
+      temp_deciDegC = ((temp_deciDegC * 1757) / 65536) - 469
 
-   call ovrBeaconAdvertManager_updateTemp_degc(temp_deciDegC / 10)
+      data(0:1) = (temp_deciDegC >> 0) & $FF
+      data(1:1) = (temp_deciDegC >> 8) & $FF
+      call attributes_write(char_tempValue_ddc, 0, 2, data(0:2))
+      call ovrBeaconAdvertManager_updateTemp_degc(temp_deciDegC / 10)
+   end if
 end
