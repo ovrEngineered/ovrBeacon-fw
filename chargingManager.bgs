@@ -35,6 +35,7 @@ export procedure chargingManager_init()
    wasCharging = 0
    wasFull = 0
    chargingManager_isCharging = 0
+   call attributes_write(char_isCharging, 0, 1, chargingManager_isCharging)
 end
 
 

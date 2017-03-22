@@ -5,8 +5,8 @@
 
 ######## private constants ########
 const DEV_TYPE = 2
-const COMPANY_ID = $ffff
-const NUM_USER_BYTES = 6
+const COMPANY_ID = $04A2
+const NUM_USER_BYTES = 7
 
 
 ######## public variables ########
@@ -19,6 +19,7 @@ dim statusByte
 ######## public procedures ########
 export procedure ovrBeaconAdvertManager_init()
    statusByte = 0
+   call advertising_init(DEV_TYPE, COMPANY_ID, NUM_USER_BYTES)
 end
 
 
@@ -35,12 +36,6 @@ end
 
 export procedure ovrBeaconAdvertManager_updateEnumerationStatus(isEnumeratingIn)
    statusByte = statusByte & ($FF - (1 << 6)) | (isEnumeratingIn << 6)
-   call advertising_setByteAtIndex(0, statusByte)
-end
-
-
-export procedure ovrBeaconAdvertManager_updateActivityStatus(isActiveIn)
-   statusByte = statusByte & ($FF - (1 << 5)) | (isActiveIn << 5)
    call advertising_setByteAtIndex(0, statusByte)
 end
 
@@ -78,7 +73,12 @@ export procedure ovrBeaconAdvertManager_updateLight(lightIn)
 end
 
 
+export procedure ovrBeaconAdvertManager_updateAccelStatus(statusIn)
+   call advertising_setByteAtIndex(4, statusIn)
+end
+
+
 export procedure ovrBeaconAdvertManager_updateBattery_mv(batt_mvIn)
-   call advertising_setByteAtIndex(4, (batt_mvIn & $000000ff) >> 0)
-   call advertising_setByteAtIndex(5, (batt_mvIn & $0000ff00) >> 8)
+   call advertising_setByteAtIndex(5, (batt_mvIn & $000000ff) >> 0)
+   call advertising_setByteAtIndex(6, (batt_mvIn & $0000ff00) >> 8)
 end

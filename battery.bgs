@@ -6,66 +6,66 @@
 ######## private constants ########
 const OFFSET_MV = 60
 
+const BATT_R1_OHM = 12000        # top resistor
+const BATT_R2_OHM = 5100         # bottom resistor
+const BATT_100PCNT_MV = 4200
+const BATT_0PCNT_MV = 3400
+
+
+####### public constants ########
+export const ADCNUM_BATT = 0
+
+
 ######## public variables ########
 export dim battery_vbatt_mv
 export dim battery_vbatt_pcnt100
-export dim battery_isUpdated
 
 
 ######## private variables ########
-dim adcNum
-
-dim rdiv_r1_ohm               # top resistor
-dim rdiv_r2_ohm               # bottom resistor
-
-dim vbatt_100pcnt_mv
-dim vbatt_0pcnt_mv
 
 
 ######## public procedures ########
-export procedure battery_init(adcNumIn, vbatt_100pcnt_mvIn, vbatt_0pcnt_mvIn, rdiv_r1_ohmIn, rdiv_r2_ohmIn)
-   adcNum = adcNumIn
+export procedure battery_init()
+   battery_vbatt_mv = 0
+   battery_vbatt_pcnt100 = 0
 
-   vbatt_0pcnt_mv = vbatt_0pcnt_mvIn
-   vbatt_100pcnt_mv = vbatt_100pcnt_mvIn
-
-   rdiv_r1_ohm = rdiv_r1_ohmIn
-   rdiv_r2_ohm = rdiv_r2_ohmIn
-
-   battery_isUpdated = 0
+   call attributes_write(char_batt_pcnt100, 0, 1, battery_vbatt_pcnt100)
+   call ovrBeaconAdvertManager_updateBattery_mv(battery_vbatt_mv)
+   call ovrBeaconAdvertManager_updateBattery_pcnt100(battery_vbatt_pcnt100)
 end
 
 
 export procedure battery_update()
-   battery_isUpdated = 0
-
    # 12-bit, internal 1.24V reference
-   call hardware_adc_read(adcNum, 3, 0)
+   call hardware_adc_read(ADCNUM_BATT, 3, 0)
 end
 
 
-export procedure battery_handleAdcRead(input, value)
-   if input = adcNum then
-      # right-shift the left-justified value
-      battery_vbatt_mv = value / 16
-      # change to millivolts (reference is 1.24, maxval is 2047)
-      battery_vbatt_mv = battery_vbatt_mv * 1240 / 2047
+export procedure battery_handleAdcRead(value)
+   # right-shift the left-justified value
+   battery_vbatt_mv = value / 16
+   # change to millivolts (reference is 1.24, maxval is 2047)
+   battery_vbatt_mv = battery_vbatt_mv * 1240 / 2047
 
-      # now adjust for our voltage divider (if present)
-      if( rdiv_r2_ohm > 0 ) then
-         battery_vbatt_mv = battery_vbatt_mv * (rdiv_r1_ohm + rdiv_r2_ohm) / rdiv_r2_ohm
-      end if
-      battery_vbatt_mv = battery_vbatt_mv + OFFSET_MV
-
-      # convert to a percentage and clamp 0 - 100
-      battery_vbatt_pcnt100 = (100 * (battery_vbatt_mv - vbatt_0pcnt_mv)) / (vbatt_100pcnt_mv - vbatt_0pcnt_mv)
-      if( battery_vbatt_pcnt100 > 100 ) then
-          battery_vbatt_pcnt100 = 100
-      end if
-      if( battery_vbatt_pcnt100 < 0 ) then
-          battery_vbatt_pcnt100 = 0
-      end if
-
-      battery_isUpdated = 1
+   # now adjust for our voltage divider (if present)
+   if( BATT_R2_OHM > 0 ) then
+      battery_vbatt_mv = battery_vbatt_mv * (BATT_R1_OHM + BATT_R2_OHM) / BATT_R2_OHM
    end if
+   battery_vbatt_mv = battery_vbatt_mv + OFFSET_MV
+
+   # convert to a percentage and clamp 0 - 100
+   battery_vbatt_pcnt100 = (100 * (battery_vbatt_mv - BATT_0PCNT_MV)) / (BATT_100PCNT_MV - BATT_0PCNT_MV)
+   if( battery_vbatt_pcnt100 > 100 ) then
+       battery_vbatt_pcnt100 = 100
+   end if
+   if( battery_vbatt_pcnt100 < 0 ) then
+       battery_vbatt_pcnt100 = 0
+   end if
+
+   call attributes_write(char_batt_pcnt100, 0, 1, battery_vbatt_pcnt100)
+   call ovrBeaconAdvertManager_updateBattery_mv(battery_vbatt_mv)
+   call ovrBeaconAdvertManager_updateBattery_pcnt100(battery_vbatt_pcnt100)
 end
+
+
+######## system events ########

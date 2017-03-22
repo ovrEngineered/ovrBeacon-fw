@@ -30,7 +30,7 @@ const BLINK_DUTYCYCLE_PCNT100 = 75
 
 ######## public procedures ########
 export procedure enumerationManager_init()
-   call attributes_write(char_alertColor, 0, 3, PS_ENUM_COLOR_RGB(0:PS_ENUM_COLOR_RGB_LEN))
+   call attributes_write(char_alertColor, 0, 3, PS_ENUM_COLOR_RGB(0:COLOR_RGB_LEN))
 end
 
 
@@ -45,7 +45,7 @@ end
 
 
 export procedure enumerationManager_setEnumerationColorRgb(rgbIn())
-   call persistentStore_setEnumColorRgb(rgbIn(0:PS_ENUM_COLOR_RGB_LEN))
+   call persistentStore_setEnumColorRgb(rgbIn(0:COLOR_RGB_LEN))
 end
 
 

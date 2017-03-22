@@ -13,21 +13,36 @@
 #const KEY_HW_REV = $8000
 const KEY_LIGHT_SNS_ENABLED = $8001
 const KEY_TEMP_SNS_ENABLED = $8002
-const KEY_ENUM_COLOR_RGB = $8004
+const KEY_ENUM_COLOR_RGB = $8003
+
+const KEY_ACCEL_CTRL = $8004
+const KEY_ACCEL_TAP_THRESH = $8005
+const KEY_ACCEL_ACT_THRESH = $8006
+const KEY_ACCEL_INACT_THRESH = $8007
+const KEY_ACCEL_FREEFALL_THRESH = $8008
+const KEY_ACCEL_RANGE = $8009
+const KEY_ACCEL_LED_COLOR_RGB = $800A
 
 const DEFAULT_ENUM_COLOR_RGB() = "\xFF\xFF\xFF"
-
-#const DEFAULT_HW_REV() = "0.5"
-#const UNSET_HW_REV()   = "???"
-#const HW_REV_LEN = 3
+const DEFAULT_ACCEL_THRESH_MAX = 255
+const DEFAULT_ACCEL_LED_COLOR_RGB() = "\x00\x00\xFF"
 
 
 ######## public variables ########
+export const COLOR_RGB_LEN = 3
+
 export dim PS_IS_LIGHT_ENABLED
 export dim PS_IS_TEMP_ENABLED
 
 export dim PS_ENUM_COLOR_RGB(3)
-export const PS_ENUM_COLOR_RGB_LEN = 3
+
+export dim PS_ACCEL_CTRL
+export dim PS_ACCEL_TAP_THRESH
+export dim PS_ACCEL_ACT_THRESH
+export dim PS_ACCEL_INACT_THRESH
+export dim PS_ACCEL_FREEFALL_THRESH
+export dim PS_ACCEL_RANGE
+export dim PS_ACCEL_LED_COLOR_RGB(3)
 
 
 ######## private variables ########
@@ -36,17 +51,10 @@ dim value_data(3)
 
 
 ######## public procedures ########
-export procedure persistentStore_init()
-   # make sure we have all of our defaults set
+export procedure persistentStore_init1()
    # Note: having (stack?) problems w/ else so broke 'else' statements
    #       into two 'if' statements
 
-   #call flash_ps_load(KEY_HW_REV)(result, value_len, value_data(:))
-   #if( result != 0 ) then
-   #   call flash_ps_save(KEY_HW_REV, HW_REV_LEN, DEFAULT_HW_REV(:))
-   #end if
-
-   # read our initial states
    call flash_ps_load(KEY_LIGHT_SNS_ENABLED)(result, value_len, value_data(0:1))
    if( result = 0 ) then
       PS_IS_LIGHT_ENABLED = value_data(0:1)
@@ -63,7 +71,7 @@ export procedure persistentStore_init()
       PS_IS_TEMP_ENABLED = 0
    end if
 
-   call flash_ps_load(KEY_ENUM_COLOR_RGB)(result, value_len, value_data(0:PS_ENUM_COLOR_RGB_LEN))
+   call flash_ps_load(KEY_ENUM_COLOR_RGB)(result, value_len, value_data(0:COLOR_RGB_LEN))
    if( result = 0 ) then
       PS_ENUM_COLOR_RGB(0:1) = value_data(0:1)
       PS_ENUM_COLOR_RGB(1:1) = value_data(1:1)
@@ -74,17 +82,72 @@ export procedure persistentStore_init()
       PS_ENUM_COLOR_RGB(1:1) = DEFAULT_ENUM_COLOR_RGB(1:1)
       PS_ENUM_COLOR_RGB(2:1) = DEFAULT_ENUM_COLOR_RGB(2:1)
    end if
+
+   call flash_ps_load(KEY_ACCEL_CTRL)(result, value_len, value_data(0:1))
+   if( result = 0 ) then
+      PS_ACCEL_CTRL = value_data(0:1)
+   end if
+   if( result != 0 ) then
+      PS_ACCEL_CTRL = 0
+   end if
 end
 
 
-export procedure persistentStore_handleHardwareRevRead(connectionIn)
-   #call flash_ps_load(KEY_HW_REV)(result, value_len, value_data(:))
-   #if( result = 0 ) then
-   #   call attributes_user_read_response(connectionIn, 0, value_len, value_data(0:value_len))
-   #else
-      # don't have a HW revision set...let the reader know nicely
-   #   call attributes_user_read_response(connectionIn, 0, HW_REV_LEN, UNSET_HW_REV(0:HW_REV_LEN))
-   #end if
+export procedure persistentStore_init2()
+   # Note: having (stack?) problems w/ else so broke 'else' statements
+   #       into two 'if' statements
+
+   call flash_ps_load(KEY_ACCEL_TAP_THRESH)(result, value_len, value_data(0:1))
+   if( result = 0 ) then
+      PS_ACCEL_TAP_THRESH = value_data(0:1)
+   end if
+   if( result != 0 ) then
+      PS_ACCEL_TAP_THRESH = DEFAULT_ACCEL_THRESH_MAX
+   end if
+
+   call flash_ps_load(KEY_ACCEL_ACT_THRESH)(result, value_len, value_data(0:1))
+   if( result = 0 ) then
+      PS_ACCEL_ACT_THRESH = value_data(0:1)
+   end if
+   if( result != 0 ) then
+      PS_ACCEL_ACT_THRESH = DEFAULT_ACCEL_THRESH_MAX
+   end if
+
+   call flash_ps_load(KEY_ACCEL_INACT_THRESH)(result, value_len, value_data(0:1))
+   if( result = 0 ) then
+      PS_ACCEL_INACT_THRESH = value_data(0:1)
+   end if
+   if( result != 0 ) then
+      PS_ACCEL_INACT_THRESH = DEFAULT_ACCEL_THRESH_MAX
+   end if
+
+   call flash_ps_load(KEY_ACCEL_FREEFALL_THRESH)(result, value_len, value_data(0:1))
+   if( result = 0 ) then
+      PS_ACCEL_FREEFALL_THRESH = value_data(0:1)
+   end if
+   if( result != 0 ) then
+      PS_ACCEL_FREEFALL_THRESH = DEFAULT_ACCEL_THRESH_MAX
+   end if
+
+   call flash_ps_load(KEY_ACCEL_RANGE)(result, value_len, value_data(0:1))
+   if( result = 0 ) then
+      PS_ACCEL_RANGE = value_data(0:1)
+   end if
+   if( result != 0 ) then
+      PS_ACCEL_RANGE = 0
+   end if
+
+   call flash_ps_load(KEY_ACCEL_LED_COLOR_RGB)(result, value_len, value_data(0:COLOR_RGB_LEN))
+   if( result = 0 ) then
+      PS_ACCEL_LED_COLOR_RGB(0:1) = value_data(0:1)
+      PS_ACCEL_LED_COLOR_RGB(1:1) = value_data(1:1)
+      PS_ACCEL_LED_COLOR_RGB(2:1) = value_data(2:1)
+   end if
+   if( result != 0 ) then
+      PS_ACCEL_LED_COLOR_RGB(0:1) = DEFAULT_ACCEL_LED_COLOR_RGB(0:1)
+      PS_ACCEL_LED_COLOR_RGB(1:1) = DEFAULT_ACCEL_LED_COLOR_RGB(1:1)
+      PS_ACCEL_LED_COLOR_RGB(2:1) = DEFAULT_ACCEL_LED_COLOR_RGB(2:1)
+   end if
 end
 
 
@@ -101,11 +164,56 @@ end
 
 
 export procedure persistentStore_setEnumColorRgb(rgbIn())
-   call flash_ps_save(KEY_ENUM_COLOR_RGB, PS_ENUM_COLOR_RGB_LEN, rgbIn(0:PS_ENUM_COLOR_RGB_LEN))
+   call flash_ps_save(KEY_ENUM_COLOR_RGB, COLOR_RGB_LEN, rgbIn(0:COLOR_RGB_LEN))
 
    PS_ENUM_COLOR_RGB(0:1) = rgbIn(0:1)
    PS_ENUM_COLOR_RGB(1:1) = rgbIn(1:1)
    PS_ENUM_COLOR_RGB(2:1) = rgbIn(2:1)
+end
+
+
+export procedure persistentStore_setAccelControl(ctrlIn)
+   call flash_ps_save(KEY_ACCEL_CTRL, 1, ctrlIn)
+   PS_ACCEL_CTRL = ctrlIn
+end
+
+
+export procedure persistentStore_setAccelTapThresh(threshIn)
+   call flash_ps_save(KEY_ACCEL_TAP_THRESH, 1, threshIn)
+   PS_ACCEL_TAP_THRESH = threshIn
+end
+
+
+export procedure persistentStore_setAccelActThresh(threshIn)
+   call flash_ps_save(KEY_ACCEL_ACT_THRESH, 1, threshIn)
+   PS_ACCEL_ACT_THRESH = threshIn
+end
+
+
+export procedure persistentStore_setAccelInactThresh(threshIn)
+   call flash_ps_save(KEY_ACCEL_INACT_THRESH, 1, threshIn)
+   PS_ACCEL_INACT_THRESH = threshIn
+end
+
+
+export procedure persistentStore_setAccelFreeFallThresh(threshIn)
+   call flash_ps_save(KEY_ACCEL_FREEFALL_THRESH, 1, threshIn)
+   PS_ACCEL_FREEFALL_THRESH = threshIn
+end
+
+
+export procedure persistentStore_setAccelRange(rangeIn)
+   call flash_ps_save(KEY_ACCEL_RANGE, 1, rangeIn)
+   PS_ACCEL_RANGE = rangeIn
+end
+
+
+export procedure persistentStore_setAccelColorRgb(rgbIn())
+   call flash_ps_save(KEY_ACCEL_LED_COLOR_RGB, COLOR_RGB_LEN, rgbIn(0:COLOR_RGB_LEN))
+
+   PS_ACCEL_LED_COLOR_RGB(0:1) = rgbIn(0:1)
+   PS_ACCEL_LED_COLOR_RGB(1:1) = rgbIn(1:1)
+   PS_ACCEL_LED_COLOR_RGB(2:1) = rgbIn(2:1)
 end
 
 

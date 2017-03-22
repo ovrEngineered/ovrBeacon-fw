@@ -27,7 +27,15 @@ dim isSleeping
 ######## public procedures ########
 export procedure pca9624_init()
    # set some initial values
-   memset(brightnessAndBlinkingRegs(0), 0, 11)
+   brightnessAndBlinkingRegs(0:1) = $0
+   brightnessAndBlinkingRegs(1:1) = $0
+   brightnessAndBlinkingRegs(2:1) = $0
+   brightnessAndBlinkingRegs(3:1) = $0
+   brightnessAndBlinkingRegs(4:1) = $0
+   brightnessAndBlinkingRegs(5:1) = $0
+   brightnessAndBlinkingRegs(6:1) = $0
+   brightnessAndBlinkingRegs(7:1) = $0
+   brightnessAndBlinkingRegs(8:1) = $0
    brightnessAndBlinkingRegs(9:1) = $ff
    brightnessAndBlinkingRegs(10:1) = $ff
 
@@ -64,7 +72,7 @@ export procedure pca9624_blank()
    # 100% duty cycle and period (no blinking)
    brightnessAndBlinkingRegs(9:1) = $ff
    brightnessAndBlinkingRegs(10:1) = $ff
-   call hardware_i2c_write(DEV_ADDR, 1, 11, brightnessAndBlinkingRegs(:))
+   call hardware_i2c_write(DEV_ADDR, 1, 11, brightnessAndBlinkingRegs(0:11))
 
    # put into sleep mode
    call hardware_i2c_write(DEV_ADDR, 1, 2, "\x00\x10")
@@ -90,7 +98,7 @@ export procedure pca9624_setSolidRgb(rgbValIn())
    # 100% duty cycle and period (no blinking)
    brightnessAndBlinkingRegs(9:1) = $ff
    brightnessAndBlinkingRegs(10:1) = $ff
-   call hardware_i2c_write(DEV_ADDR, 1, 11, brightnessAndBlinkingRegs(:))
+   call hardware_i2c_write(DEV_ADDR, 1, 11, brightnessAndBlinkingRegs(0:11))
 
    # make sure our oscillator is running
    if( isSleeping ) then
@@ -118,7 +126,7 @@ export procedure pca9624_blinkRgb(period_msIn, dutyCycle_pcnt100In, rgbValIn())
    # 100% duty cycle and period (no blinking)
    brightnessAndBlinkingRegs(9:1) = (dutyCycle_pcnt100In * 256) / 100
    brightnessAndBlinkingRegs(10:1) = ((period_msIn * 24) / 1000) - 1
-   call hardware_i2c_write(DEV_ADDR, 1, 11, brightnessAndBlinkingRegs(:))
+   call hardware_i2c_write(DEV_ADDR, 1, 11, brightnessAndBlinkingRegs(0:11))
 
    # make sure our oscillator is running
    if( isSleeping ) then

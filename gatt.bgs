@@ -29,19 +29,45 @@ event attributes_value(connection, reason, handle, offset, value_len, value_data
    if( handle = char_alertLevel ) then
       call enumerationManager_startEnumeration(value_data(offset:1))
    end if
-   if( (handle = char_alertColor) && (value_len = PS_ENUM_COLOR_RGB_LEN) ) then
+   if( (handle = char_alertColor) && (value_len = COLOR_RGB_LEN) ) then
       call enumerationManager_setEnumerationColorRgb(value_data(0:value_len))
    end if
+
    if( handle = char_otaControl ) then
       call ota_handleControl(connection, value_len, value_data(offset:value_len))
    end if
    if( handle = char_otaData ) then
       call ota_handleData(value_len, value_data(offset:value_len))
    end if
+
    if( handle = char_lightSnsEnabled ) then
       call ltr329_setEnabled(value_data(0:1))
    end if
+
    if( handle = char_tempSnsEnabled ) then
       call si7050_setEnabled(value_data(0:1))
    end if
+
+   if( handle = char_accelCtrl ) then
+      call adxl345_setControl(value_data(0:1))
+   end if
+   if( handle = char_accelTapThresh ) then
+      call adxl345_setTapThresh(value_data(0:1))
+   end if
+   if( handle = char_accelActivityThresh ) then
+      call adxl345_setActThresh(value_data(0:1))
+   end if
+   if( handle = char_accelInactivityThresh ) then
+      call adxl345_setInactThresh(value_data(0:1))
+   end if
+   if( handle = char_freeFallThresh ) then
+      call adxl345_setFreeFallThresh(value_data(0:1))
+   end if
+   if( handle = char_accelRange ) then
+      call adxl345_setAccelRange(value_data(0:1))
+   end if
+   if( (handle = char_accelLedLinkColor) && (value_len = COLOR_RGB_LEN) ) then
+      call adxl345_setAccelColorRgb(value_data(0:value_len))
+   end if
+
 end

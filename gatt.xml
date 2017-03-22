@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
    <service uuid="1800">
-      <description>Generic Access Profile</description>
+      <!-- <description>Generic Access Profile</description> -->
 
       <characteristic uuid="2a00">
-         <description>Device Name</description>
+         <!-- <description>Device Name</description> -->
          <properties read="true" const="true" />
          <value>ovrBeacon</value>
       </characteristic>
 
       <characteristic uuid="2a01">
-         <description>Appearance</description>
+         <!-- <description>Appearance</description> -->
          <properties read="true" const="true" />
          <value type="hex">512</value>   <!-- generic tag -->
       </characteristic>
@@ -20,7 +20,7 @@
       <description>Immediate Alert</description>
 
       <characteristic uuid="2A06" id="char_alertLevel">
-         <description>Alert Level</description>
+         <!-- <description>Alert Level</description> -->
          <properties read="false" write="true" />
          <value length="1" type="hex">00</value>
       </characteristic>
@@ -33,22 +33,22 @@
     </service>
 
     <service uuid="180A" id="service_manufacturer">
-      <description>Device Information</description>
+      <!-- <description>Device Information</description> -->
 
       <characteristic uuid="2A29">
-         <description>Manufacturer Name</description>
+         <!-- <description>Manufacturer Name</description> -->
          <properties read="true" const="true" />
          <value>ovrEngineered, LLC</value>
       </characteristic>
 
       <characteristic uuid="2A27" id="char_hardwareRev">
-         <description>Hardware Revision</description>
+         <!-- <description>Hardware Revision</description> -->
          <properties read="true" const="true" />
          <value>0.4</value>
       </characteristic>
 
       <characteristic uuid="2A26">
-         <description>Firmware Revision</description>
+         <!-- <description>Firmware Revision</description> -->
          <properties read="true" const="true" />
          <value>0.5</value>
       </characteristic>
@@ -56,9 +56,9 @@
 
 
    <service uuid="180F" id="service_battery">
-      <description>Battery</description>
+      <!-- <description>Battery</description> -->
       <characteristic uuid="2A19" id="char_batt_pcnt100">
-         <description>Battery Level</description>
+         <!-- <description>Battery Level</description> -->
          <properties read="true" write="false" />
          <value type="hex">00</value>
       </characteristic>
@@ -70,7 +70,7 @@
       <description>ovrBeacon Service</description>
 
       <characteristic uuid="1dab553d-e888-43f5-9c26-0ac876270f6c" id="char_isCharging">
-         <description>Is Charging?</description>
+         <description>Charging</description>
          <properties read="true" />
          <value type="hex">00</value>
       </characteristic>
@@ -98,6 +98,55 @@
          <properties read="true" />
          <value length="2" type="hex">0000</value>
       </characteristic>
+
+      <characteristic uuid="70bdc000-eb4b-4568-aa78-58ad227a4ff1" id="char_accelCtrl">
+         <description>Accel. Control</description>
+         <properties read="true" write="true" />
+         <value length="1" type="hex">00</value>
+      </characteristic>
+
+      <characteristic uuid="0102b79b-eed9-4fdf-9ef8-e4c53f487831" id="char_accelStatus">
+         <description>Accel. Status</description>
+         <properties read="true" />
+         <value length="1" type="hex">00</value>
+      </characteristic>
+
+      <characteristic uuid="12dd3c7c-a556-4128-8509-e137c5c7b752" id="char_accelTapThresh">
+         <description>Accel. Tap Thresh.</description>
+         <properties read="true" write="true"/>
+         <value length="1" type="hex">FF</value>
+      </characteristic>
+
+      <characteristic uuid="6ca55195-5dbb-4d5e-b2e3-b862d2fa5a88" id="char_accelActivityThresh">
+         <description>Accel. Act. Thresh.</description>
+         <properties read="true" write="true"/>
+         <value length="1" type="hex">FF</value>
+      </characteristic>
+
+      <characteristic uuid="3495f1f0-181b-4f10-bac2-0ab930efd95c" id="char_accelInactivityThresh">
+         <description>Accel. Inact. Thresh.</description>
+         <properties read="true" write="true"/>
+         <value length="1" type="hex">FF</value>
+      </characteristic>
+
+      <characteristic uuid="a9724ef9-bb0b-4f1d-b319-787c2cda89a8" id="char_freeFallThresh">
+         <description>Accel. FreeFall Thresh.</description>
+         <properties read="true" write="true"/>
+         <value length="1" type="hex">FF</value>
+      </characteristic>
+
+      <characteristic uuid="bfab6883-60ad-427c-b3fa-f2673feea722" id="char_accelRange">
+         <description>Accel. Range</description>
+         <properties read="true" write="true"/>
+         <value length="1" type="hex">FF</value>
+      </characteristic>
+
+      <characteristic uuid="2c2f7285-fc11-4d86-ad07-6e98ea7654eb" id="char_accelLedLinkColor">
+         <description>Accel. LED Color (RGB)</description>
+         <properties read="true" write="true"/>
+         <value length="3" type="hex">0000FF</value>
+      </characteristic>
+
    </service>
 
 

@@ -2,8 +2,9 @@
 
 <config>
    <!-- used to store OTA flash image -->
-   <user_data size="0x20000" />
-   
+   <!-- <user_data size="0x20000" /> -->
+
    <!-- Increase script timeout from default to allow flash erase in loop -->
-   <script_timeout value="10000" />
+   <!-- <script_timeout value="10000" /> -->
+   <script_timeout value="0" />
 </config>
