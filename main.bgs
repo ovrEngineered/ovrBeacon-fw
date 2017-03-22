@@ -10,8 +10,8 @@ import "ovrBeaconAdvertManager.bgs"
 import "battery.bgs"
 import "si7050.bgs"
 import "pca9624.bgs"
+import "ledManager.bgs"
 import "chargingManager.bgs"
-import "enumerationManager.bgs"
 import "adxl345.bgs"
 import "ltr329.bgs"
 import "sensorManager.bgs"
@@ -30,8 +30,8 @@ event system_boot(major, minor, patch, build, ll_version, protocol_version, hw)
    call ovrBeaconAdvertManager_init()
 
    call pca9624_init()
-
-   call enumerationManager_init()
+   call ledManager_init()
+   
    call chargingManager_init()
 
    call battery_init()
@@ -41,19 +41,11 @@ event system_boot(major, minor, patch, build, ll_version, protocol_version, hw)
    call sensorManager_init()
 
    call ovrBeaconAdvertManager_start()
-   #call pca9624_setSolidRgb("\x00\x07\x00")
 end
 
 
 event hardware_io_port_status(timestamp, port, irq, state)
    if( (port = ADXL345_PORT) && ((state & (1 << ADXL345_PINNUM_1)) || (state & (1 << ADXL345_PINNUM_2))) ) then
-      call adxl345_update()
-   end if
-end
-
-
-event connection_status(connection, flags, address, address_type, conn_interval, timeout, latency, bonding)
-   if( flags & (1 << 2) ) then
-      call pca9624_blank()
+      call adxl345_handleInterrupt()
    end if
 end

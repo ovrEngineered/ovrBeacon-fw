@@ -19,17 +19,20 @@ end
 ######## system events ########
 event hardware_soft_timer(handle)
    # see if this is meant for other timed events first...
-   if( handle = ENUMMAN_TIMERHANDLE_ENUMCOMPLETE ) then
-      call enumerationManager_stopEnumeration()
+   if( handle = LED_TIMERHANDLE_ENUMCOMPLETE ) then
+      call ledManager_stopEnumeration()
       return
    end if
 
-   # must be meant for us...start our updating
+   # must be meant for us...call our update functions
    call ltr329_update()
    call adxl345_update()
    call si7050_update()
    call chargingManager_update()
    call battery_update()
+
+   # now update our sensor status
+   call attributes_write(char_sensorStatus, 0, 1, (ADXL345_ERROR << 2) | (SI7050_ERROR << 1) | (LTR329_ERROR << 0))
 end
 
 

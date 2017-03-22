@@ -23,9 +23,6 @@ const ADXL345_CTRL_BITNUM_LEDLINK_1TAP = 5
 const ADXL345_CTRL_BITNUM_LEDLINK_2TAP = 6
 const ADXL345_CTRL_BITNUM_LEDLINK_FREEFALL = 7
 
-
-
-
 const ADXL345_STATUS_BITNUM_ACTIVITY = 0
 const ADXL345_STATUS_BITNUM_1TAP = 1
 const ADXL345_STATUS_BITNUM_2TAP = 2
@@ -35,14 +32,17 @@ const TAP_DURATION = $08
 const TAP2_LATENCY = $A0
 const TAP2_WINDOW = $A0
 const INACT_MINDURATION = $05
-const FREEFALL_MINDURATION = $05
+const INACT_MINDURATION_FFONLY = $01
+const FREEFALL_THRESH = $07
+const FREEFALL_MINDURATION = $14
 const TAP_AXES = $07
 const BW_RATE = $18
-const POWER_CTL = $29
-const INT_MAP = $2C
+#const INT_MAP = $2C
+const INT_MAP = $00
 
 
 ######## public variables ########
+export dim ADXL345_ERROR
 
 
 ######## private variables ########
@@ -55,16 +55,25 @@ dim accelStatus
 dim data_len
 dim data(2)
 
+dim needsInit
+
 
 ######## private procedures ########
 
 
 ######## public procedures ########
 export procedure adxl345_init()
-   #PS_ACCEL_CTRL = $11
-   #PS_ACCEL_ACT_THRESH = $08
-   #PS_ACCEL_INACT_THRESH = $04
+   # verify that the sensor is present
+   call hardware_i2c_write($3A, 0, 1, "\x00")
+   call hardware_i2c_read($3A, 1, 1)(result, data_len, data(0:1))
+   if( (result = 0) && (data(0:1) = $E5) ) then
+      ADXL345_ERROR = 0
+   else
+      ADXL345_ERROR = 1
+      return
+   end if
 
+   # enable or disable as requested
    if( PS_ACCEL_CTRL = 0 ) then
       call hardware_i2c_write($3A, 1, 2, "\x2D\x00")     # power ctrl
 
@@ -80,6 +89,9 @@ export procedure adxl345_init()
       call hardware_i2c_write($3A, 1, 2, "\x2E\x00")
    end if
    if( PS_ACCEL_CTRL != 0 ) then
+      # stop measurements
+      call hardware_i2c_write($3A, 1, 2, "\x2D\x00")     # power ctrl
+
       # thresh_tap
       data(0:1) = $1D
       data(1:1) = PS_ACCEL_TAP_THRESH
@@ -112,7 +124,11 @@ export procedure adxl345_init()
 
       # time_inact
       data(0:1) = $26
-      data(1:1) = INACT_MINDURATION
+      if( (PS_ACCEL_CTRL & (1 << ADXL345_CTRL_BITNUM_ACTIVITY) = 0) && (PS_ACCEL_CTRL & (1 << ADXL345_CTRL_BITNUM_FREEFALL)) ) then
+         data(1:1) = INACT_MINDURATION_FFONLY
+      else
+         data(1:1) = INACT_MINDURATION
+      end if
       call hardware_i2c_write($3A, 1, 2, data(0:2))
 
       # act_inact_ctl
@@ -120,13 +136,17 @@ export procedure adxl345_init()
       if( PS_ACCEL_CTRL & (1 << ADXL345_CTRL_BITNUM_ACTIVITY) ) then
          data(1:1) = $FF
       else
-         data(1:1) = $00
+         if( PS_ACCEL_CTRL & (1 << ADXL345_CTRL_BITNUM_FREEFALL) ) then
+            data(1:1) = $0F
+         else
+            data(1:1) = $00
+         end if
       end if
       call hardware_i2c_write($3A, 1, 2, data(0:2))
 
       # thresh_ff
       data(0:1) = $28
-      data(1:1) = PS_ACCEL_FREEFALL_THRESH
+      data(1:1) = FREEFALL_THRESH
       call hardware_i2c_write($3A, 1, 2, data(0:2))
 
       # time_ff
@@ -140,22 +160,17 @@ export procedure adxl345_init()
       call hardware_i2c_write($3A, 1, 2, data(0:2))
 
       # bw_rate
-      data(0:0) = $2C
+      data(0:1) = $2C
       data(1:1) = BW_RATE
       call hardware_i2c_write($3A, 1, 2, data(0:2))
 
-      # power_ctl
-      data(0:0) = $2D
-      data(1:1) = POWER_CTL
-      call hardware_i2c_write($3A, 1, 2, data(0:2))
-
       # INT_MAP
-      data(0:0) = $2F
+      data(0:1) = $2F
       data(1:1) = INT_MAP
       call hardware_i2c_write($3A, 1, 2, data(0:2))
 
       # data_format
-      data(0:0) = $31
+      data(0:1) = $31
       data(1:1) = (PS_ACCEL_RANGE & $03)
       call hardware_i2c_write($3A, 1, 2, data(0:2))
 
@@ -163,12 +178,20 @@ export procedure adxl345_init()
       call hardware_i2c_write($3A, 0, 1, "\x30")
       call hardware_i2c_read($3A, 1, 1)
 
+      # power_ctl
+      data(0:1) = $2D
+      data(1:1) = $08
+      if( PS_ACCEL_CTRL & (1 << ADXL345_CTRL_BITNUM_ACTIVITY) ) then
+         data(1:1) = data(1:1) | $20
+      end if
+      call hardware_i2c_write($3A, 1, 2, data(0:2))
+
       # Enable GPIO interrupts on rising edge
       call hardware_io_port_irq_direction(ADXL345_PORT, 0)
       call hardware_io_port_irq_enable(ADXL345_PORT, (1 << ADXL345_PINNUM_1) | (1 << ADXL345_PINNUM_2))
 
       # enable interrupts
-      data(0:0) = $2E
+      data(0:1) = $2E
       data(1:1) = $00
       if( PS_ACCEL_CTRL & (1 << ADXL345_CTRL_BITNUM_1TAP) ) then
          data(1:1) = data(1:1) | (1 << 6)
@@ -180,7 +203,7 @@ export procedure adxl345_init()
          data(1:1) = data(1:1) | (1 << 4) | (1 << 3)
       end if
       if( PS_ACCEL_CTRL & (1 << ADXL345_CTRL_BITNUM_FREEFALL) ) then
-         data(1:1) = data(1:1) | (1 << 2)
+         data(1:1) = data(1:1) | (1 << 3) | (1 << 2)
       end if
       call hardware_i2c_write($3A, 1, 2, data(0:2))
    end if
@@ -192,66 +215,52 @@ export procedure adxl345_init()
    call attributes_write(char_accelTapThresh, 0, 1, PS_ACCEL_TAP_THRESH)
    call attributes_write(char_accelActivityThresh, 0, 1, PS_ACCEL_ACT_THRESH)
    call attributes_write(char_accelInactivityThresh, 0, 1, PS_ACCEL_INACT_THRESH)
-   call attributes_write(char_freeFallThresh, 0, 1, PS_ACCEL_FREEFALL_THRESH)
    call attributes_write(char_accelRange, 0, 1, PS_ACCEL_RANGE)
-   call attributes_write(char_accelLedLinkColor, 0, COLOR_RGB_LEN, PS_ACCEL_LED_COLOR_RGB(0:char_accelLedLinkColor))
 
    call ovrBeaconAdvertManager_updateAccelEnabled(PS_ACCEL_CTRL != 0)
    call ovrBeaconAdvertManager_updateAccelStatus(accelStatus)
+
+   needsInit = 0
 end
 
 
 export procedure adxl345_setControl(ctrlIn)
    call persistentStore_setAccelControl(ctrlIn)
-   call adxl345_init()
+   needsInit = 1
 end
 
 
 export procedure adxl345_setTapThresh(threshIn)
    call persistentStore_setAccelTapThresh(threshIn)
-   call adxl345_init()
+   needsInit = 1
 end
 
 
 export procedure adxl345_setActThresh(threshIn)
    call persistentStore_setAccelActThresh(threshIn)
-   call adxl345_init()
+   needsInit = 1
 end
 
 
 export procedure adxl345_setInactThresh(threshIn)
    call persistentStore_setAccelInactThresh(threshIn)
-   call adxl345_init()
-end
-
-
-export procedure adxl345_setFreeFallThresh(threshIn)
-   call persistentStore_setAccelFreeFallThresh(threshIn)
-   call adxl345_init()
+   needsInit = 1
 end
 
 
 export procedure adxl345_setAccelRange(rangeIn)
    call persistentStore_setAccelRange(rangeIn)
-   call adxl345_init()
+   needsInit = 1
 end
 
 
-export procedure adxl345_setAccelColorRgb(rgbIn())
-   call persistentStore_setAccelColorRgb(rgbIn(0:COLOR_RGB_LEN))
-end
-
-
-export procedure adxl345_update()
-   call hardware_io_port_read(ADXL345_PORT, (1 << ADXL345_PINNUM_1) | (1 << ADXL345_PINNUM_2))(result, port, portState)
-   if( portState = 0 ) then
-      return
-   end if
-
+export procedure adxl345_handleInterrupt()
    # read our interrupt source (clearing our interrupt)
    call hardware_i2c_write($3A, 0, 1, "\x30")
    call hardware_i2c_read($3A, 1, 1)(result, data_len, data(0:1))
    if( result = 0 ) then
+      ADXL345_ERROR = 0
+
       if( data(0:1) & (1 << 6) ) then
          accelStatus = accelStatus | (1 << ADXL345_STATUS_BITNUM_1TAP)
       else
@@ -288,10 +297,27 @@ export procedure adxl345_update()
          result = 1
       end if
       if( result != 0 ) then
-         call pca9624_setSolidRgb(PS_ACCEL_LED_COLOR_RGB(0:COLOR_RGB_LEN))
+         call ledManager_setAccelOn(1)
       else
-         call pca9624_blank()
+         call ledManager_setAccelOn(0)
       end if
+   else
+      ADXL345_ERROR = 1
+   end if
+end
+
+
+export procedure adxl345_update()
+   # re-initialize our accel if needed
+   if( needsInit ) then
+      call adxl345_init()
+      return
+   end if
+
+   # no re-initialization required...make sure we didn't miss an interrupt
+   call hardware_io_port_read(ADXL345_PORT, (1 << ADXL345_PINNUM_1) | (1 << ADXL345_PINNUM_2))(result, port, portState)
+   if( portState != 0 ) then
+      call adxl345_handleInterrupt()
    end if
 end
 

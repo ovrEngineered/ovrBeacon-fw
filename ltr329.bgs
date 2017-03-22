@@ -7,6 +7,7 @@
 
 
 ######## public variables ########
+export dim LTR329_ERROR
 
 
 ######## private variables ########
@@ -19,6 +20,16 @@ dim lightVal_255
 
 ######## public procedures ########
 export procedure ltr329_init()
+   # verify that the sensor is present
+   call hardware_i2c_write($52, 0, 1, "\x87")
+   call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
+   if( (result = 0) && (data(0:1) = $05) ) then
+      LTR329_ERROR = 0
+   else
+      LTR329_ERROR = 1
+   end if
+
+   # enable or disable as requested
    if( PS_IS_LIGHT_ENABLED ) then
       # bring out of standby, set gain
       call hardware_i2c_write($52, 1, 2, "\x80\x0D")
@@ -54,10 +65,19 @@ export procedure ltr329_update()
       call hardware_i2c_write($52, 0, 1, "\x8A")
       call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
       lightVal_255 = data(0:1)
-      # we don't care about the lower byte...
+      # we don't care about the lower byte...but should read it anyways
       call hardware_i2c_write($52, 0, 1, "\x8B")
       call hardware_i2c_read($52, 1, 1)(result, data_len, data(:))
 
+      # check the end-result...if it wasn't successful, the other ones
+      # probabably weren't either
+      if( result = 0 ) then
+         LTR329_ERROR = 0
+      else
+         LTR329_ERROR = 1
+      end if
+
+      # update our GATT attributs and advertising value
       call attributes_write(char_lightValue, 0, 1, lightVal_255)
       call ovrBeaconAdvertManager_updateLight(lightVal_255)
       call ovrBeaconAdvertManager_updateLightEnabled(PS_IS_LIGHT_ENABLED)

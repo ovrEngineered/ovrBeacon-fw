@@ -69,6 +69,12 @@
    <service uuid="9b81950a-7019-40db-94b5-d8d6b463bdb2" id="service_ovrBeacon_tc">
       <description>ovrBeacon Service</description>
 
+      <characteristic uuid="b5aa3c10-b4a4-415e-a92c-d369ec381873" id="char_sensorStatus">
+         <description>Sensor Status</description>
+         <properties read="true" />
+         <value type="hex">00</value>
+      </characteristic>
+
       <characteristic uuid="1dab553d-e888-43f5-9c26-0ac876270f6c" id="char_isCharging">
          <description>Charging</description>
          <properties read="true" />
@@ -125,12 +131,6 @@
 
       <characteristic uuid="3495f1f0-181b-4f10-bac2-0ab930efd95c" id="char_accelInactivityThresh">
          <description>Accel. Inact. Thresh.</description>
-         <properties read="true" write="true"/>
-         <value length="1" type="hex">FF</value>
-      </characteristic>
-
-      <characteristic uuid="a9724ef9-bb0b-4f1d-b319-787c2cda89a8" id="char_freeFallThresh">
-         <description>Accel. FreeFall Thresh.</description>
          <properties read="true" write="true"/>
          <value length="1" type="hex">FF</value>
       </characteristic>

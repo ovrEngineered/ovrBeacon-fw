@@ -1,0 +1,123 @@
+#
+# @author Christopher Armenio
+#
+
+
+######## imports ########
+
+
+######## public constants ########
+export const LED_TIMERHANDLE_ENUMCOMPLETE = 1
+
+
+######## private constants ########
+const ALERT_LEVEL_NONE = 0
+const ALERT_LEVEL_LOW = 1
+const ALERT_LEVEL_HIGH = 2
+
+const ALERT_TIME_LOW = 5
+const ALERT_TIME_HIGH = 30
+
+const ENUM_BLINK_PERIOD_MS = 500
+const ENUM_BLINK_DUTYCYCLE_PCNT100 = 75
+
+const CHARGING_BLINK_PERIOD_MS = 1500
+const CHARGING_BLINK_DUTYCYCLE_PCNT100 = 5
+
+const CHARGING_RGB() = "\x33\x19\x00"
+const CHARGED_RGB() = "\x00\xFF\x00"
+
+
+######## public variables ########
+
+
+######## private variables ########
+dim isEnumerating, isAccelOn, isCharging, isCharged
+
+
+######## private procedures ########
+procedure ledManager_update()
+   if( isEnumerating ) then
+      # most important
+      call pca9624_blinkRgb(ENUM_BLINK_PERIOD_MS, ENUM_BLINK_DUTYCYCLE_PCNT100, PS_ENUM_COLOR_RGB(:))
+      return
+   end if
+   if( isAccelOn ) then
+      call pca9624_setSolidRgb(PS_ACCEL_LED_COLOR_RGB(:))
+      return
+   end if
+   if( isCharging ) then
+      if( isCharged ) then
+         call pca9624_blinkRgb(CHARGING_BLINK_PERIOD_MS, CHARGING_BLINK_DUTYCYCLE_PCNT100, CHARGED_RGB(:))
+      else
+         call pca9624_blinkRgb(CHARGING_BLINK_PERIOD_MS, CHARGING_BLINK_DUTYCYCLE_PCNT100, CHARGING_RGB(:))
+      end if
+      return
+   end if
+
+   # if we made it here, no LEDs should be on
+   call pca9624_blank()
+end
+
+
+######## public procedures ########
+export procedure ledManager_init()
+   call attributes_write(char_alertColor, 0, 3, PS_ENUM_COLOR_RGB(0:COLOR_RGB_LEN))
+   call attributes_write(char_accelLedLinkColor, 0, COLOR_RGB_LEN, PS_ACCEL_LED_COLOR_RGB(0:char_accelLedLinkColor))
+
+   call pca9624_blank()
+end
+
+
+export procedure ledManager_setEnumerationColorRgb(rgbIn())
+   call persistentStore_setEnumColorRgb(rgbIn(0:COLOR_RGB_LEN))
+   call ledManager_update()
+end
+
+
+export procedure ledManager_setAccelColorRgb(rgbIn())
+   call persistentStore_setAccelColorRgb(rgbIn(0:COLOR_RGB_LEN))
+   call ledManager_update()
+end
+
+
+export procedure ledManager_setIsCharging(isChargingIn, isChargedIn)
+   isCharging = isChargingIn
+   isCharged = isChargedIn
+   call ledManager_update()
+end
+
+
+export procedure ledManager_setAccelOn(isAccelOnIn)
+   isAccelOn = isAccelOnIn
+   call ledManager_update()
+end
+
+
+export procedure ledManager_stopEnumeration()
+   isEnumerating = 0
+   call ovrBeaconAdvertManager_updateEnumerationStatus(0)
+   call ledManager_update()
+end
+
+
+export procedure ledManager_startEnumeration(alertLevelIn)
+   if( alertLevelIn = ALERT_LEVEL_NONE ) then
+      call ledManager_stopEnumeration()
+      return
+   end if
+   if( alertLevelIn = ALERT_LEVEL_LOW ) then
+      isEnumerating = 1
+      call ovrBeaconAdvertManager_updateEnumerationStatus(1)
+      call ledManager_update()
+      call hardware_set_soft_timer(ALERT_TIME_LOW * 32768, LED_TIMERHANDLE_ENUMCOMPLETE, 1)
+      return
+   end if
+   if( alertLevelIn = ALERT_LEVEL_HIGH ) then
+      isEnumerating = 1
+      call ovrBeaconAdvertManager_updateEnumerationStatus(1)
+      call ledManager_update()
+      call hardware_set_soft_timer(ALERT_TIME_HIGH * 32768, LED_TIMERHANDLE_ENUMCOMPLETE, 1)
+      return
+   end if
+end

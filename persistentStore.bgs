@@ -40,7 +40,6 @@ export dim PS_ACCEL_CTRL
 export dim PS_ACCEL_TAP_THRESH
 export dim PS_ACCEL_ACT_THRESH
 export dim PS_ACCEL_INACT_THRESH
-export dim PS_ACCEL_FREEFALL_THRESH
 export dim PS_ACCEL_RANGE
 export dim PS_ACCEL_LED_COLOR_RGB(3)
 
@@ -121,14 +120,6 @@ export procedure persistentStore_init2()
       PS_ACCEL_INACT_THRESH = DEFAULT_ACCEL_THRESH_MAX
    end if
 
-   call flash_ps_load(KEY_ACCEL_FREEFALL_THRESH)(result, value_len, value_data(0:1))
-   if( result = 0 ) then
-      PS_ACCEL_FREEFALL_THRESH = value_data(0:1)
-   end if
-   if( result != 0 ) then
-      PS_ACCEL_FREEFALL_THRESH = DEFAULT_ACCEL_THRESH_MAX
-   end if
-
    call flash_ps_load(KEY_ACCEL_RANGE)(result, value_len, value_data(0:1))
    if( result = 0 ) then
       PS_ACCEL_RANGE = value_data(0:1)
@@ -193,12 +184,6 @@ end
 export procedure persistentStore_setAccelInactThresh(threshIn)
    call flash_ps_save(KEY_ACCEL_INACT_THRESH, 1, threshIn)
    PS_ACCEL_INACT_THRESH = threshIn
-end
-
-
-export procedure persistentStore_setAccelFreeFallThresh(threshIn)
-   call flash_ps_save(KEY_ACCEL_FREEFALL_THRESH, 1, threshIn)
-   PS_ACCEL_FREEFALL_THRESH = threshIn
 end
 
 
