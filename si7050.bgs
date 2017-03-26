@@ -16,6 +16,8 @@ dim data_len
 dim data(2)
 dim temp_deciDegC
 
+dim needsInit
+
 
 ######## public procedures ########
 export procedure si7050_init()
@@ -34,18 +36,26 @@ export procedure si7050_init()
    data(0:1) = (temp_deciDegC >> 0) & $FF
    data(1:1) = (temp_deciDegC >> 8) & $FF
    call attributes_write(char_tempValue_ddc, 0, 2, data(0:2))
-   call ovrBeaconAdvertManager_updateTemp_degc(temp_deciDegC)
+   call ovrBeaconAdvertManager_updateTemp_deciDegC(temp_deciDegC)
    call ovrBeaconAdvertManager_updateTempEnabled(PS_IS_TEMP_ENABLED)
+
+   needsInit = 0
 end
 
 
 export procedure si7050_setEnabled(isEnabledIn)
    call persistentStore_setTempEnabled(isEnabledIn)
-   call si7050_init()
+   needsInit = 1
 end
 
 
 export procedure si7050_update()
+   # re-initialize our sensor if needed
+   if( needsInit ) then
+      call si7050_init()
+      return
+   end if
+
    if( PS_IS_TEMP_ENABLED ) then
       call hardware_i2c_write($80, 0, 1, "\xE3")
       call hardware_i2c_read($80, 1, 2)(result, data_len, data(:))
@@ -58,7 +68,7 @@ export procedure si7050_update()
          data(0:1) = (temp_deciDegC >> 0) & $FF
          data(1:1) = (temp_deciDegC >> 8) & $FF
          call attributes_write(char_tempValue_ddc, 0, 2, data(0:2))
-         call ovrBeaconAdvertManager_updateTemp_degc(temp_deciDegC / 10)
+         call ovrBeaconAdvertManager_updateTemp_deciDegC(temp_deciDegC)
       else
          SI7050_ERROR = 1
       end if
