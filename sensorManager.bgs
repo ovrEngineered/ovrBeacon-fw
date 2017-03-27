@@ -33,6 +33,9 @@ event hardware_soft_timer(handle)
 
    # now update our sensor status
    call attributes_write(char_sensorStatus, 0, 1, (ADXL345_ERROR << 2) | (SI7050_ERROR << 1) | (LTR329_ERROR << 0))
+   call ovrBeaconAdvertManager_updateStatus_accelError(ADXL345_ERROR)
+   call ovrBeaconAdvertManager_updateStatus_tempError(SI7050_ERROR)
+   call ovrBeaconAdvertManager_updateStatus_lightError(LTR329_ERROR)
 end
 
 

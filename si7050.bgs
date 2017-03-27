@@ -37,7 +37,7 @@ export procedure si7050_init()
    data(1:1) = (temp_deciDegC >> 8) & $FF
    call attributes_write(char_tempValue_ddc, 0, 2, data(0:2))
    call ovrBeaconAdvertManager_updateTemp_deciDegC(temp_deciDegC)
-   call ovrBeaconAdvertManager_updateTempEnabled(PS_IS_TEMP_ENABLED)
+   call ovrBeaconAdvertManager_updateStatus_tempEnabled(PS_IS_TEMP_ENABLED)
 
    needsInit = 0
 end

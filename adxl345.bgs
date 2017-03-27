@@ -217,7 +217,7 @@ export procedure adxl345_init()
    call attributes_write(char_accelInactivityThresh, 0, 1, PS_ACCEL_INACT_THRESH)
    call attributes_write(char_accelRange, 0, 1, PS_ACCEL_RANGE)
 
-   call ovrBeaconAdvertManager_updateAccelEnabled(PS_ACCEL_CTRL != 0)
+   call ovrBeaconAdvertManager_updateStatus_accelEnabled(PS_ACCEL_CTRL != 0)
    call ovrBeaconAdvertManager_updateAccelStatus(accelStatus)
 
    needsInit = 0

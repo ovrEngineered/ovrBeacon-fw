@@ -96,7 +96,7 @@ end
 
 export procedure ledManager_stopEnumeration()
    isEnumerating = 0
-   call ovrBeaconAdvertManager_updateEnumerationStatus(0)
+   call ovrBeaconAdvertManager_updateStatus_enumeration(0)
    call ledManager_update()
 end
 
@@ -108,14 +108,14 @@ export procedure ledManager_startEnumeration(alertLevelIn)
    end if
    if( alertLevelIn = ALERT_LEVEL_LOW ) then
       isEnumerating = 1
-      call ovrBeaconAdvertManager_updateEnumerationStatus(1)
+      call ovrBeaconAdvertManager_updateStatus_enumeration(1)
       call ledManager_update()
       call hardware_set_soft_timer(ALERT_TIME_LOW * 32768, LED_TIMERHANDLE_ENUMCOMPLETE, 1)
       return
    end if
    if( alertLevelIn = ALERT_LEVEL_HIGH ) then
       isEnumerating = 1
-      call ovrBeaconAdvertManager_updateEnumerationStatus(1)
+      call ovrBeaconAdvertManager_updateStatus_enumeration(1)
       call ledManager_update()
       call hardware_set_soft_timer(ALERT_TIME_HIGH * 32768, LED_TIMERHANDLE_ENUMCOMPLETE, 1)
       return

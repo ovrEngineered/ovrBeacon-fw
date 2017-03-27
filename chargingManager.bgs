@@ -43,7 +43,7 @@ export procedure chargingManager_update()
    if( isCharging ) then
       if( wasCharging = 0 ) then
          # we _were not_ charging, now we are...update our led
-         call ovrBeaconAdvertManager_updateChargingStatus(isCharging)
+         call ovrBeaconAdvertManager_updateStatus_charging(isCharging)
          wasFull = 0
          call ledManager_setIsCharging(1, 0)
       else
@@ -55,7 +55,7 @@ export procedure chargingManager_update()
       end if
    end if
    if( (isCharging = 0) & wasCharging ) then
-      call ovrBeaconAdvertManager_updateChargingStatus(isCharging)
+      call ovrBeaconAdvertManager_updateStatus_charging(isCharging)
       call ledManager_setIsCharging(0, 0)
    end if
    wasCharging = isCharging

@@ -28,31 +28,49 @@ export procedure ovrBeaconAdvertManager_start()
 end
 
 
-export procedure ovrBeaconAdvertManager_updateChargingStatus(isChargingIn)
+export procedure ovrBeaconAdvertManager_updateStatus_charging(isChargingIn)
    statusByte = statusByte & ($FF - (1 << 7)) | (isChargingIn << 7)
    call advertising_setByteAtIndex(0, statusByte)
 end
 
 
-export procedure ovrBeaconAdvertManager_updateEnumerationStatus(isEnumeratingIn)
+export procedure ovrBeaconAdvertManager_updateStatus_enumeration(isEnumeratingIn)
    statusByte = statusByte & ($FF - (1 << 6)) | (isEnumeratingIn << 6)
    call advertising_setByteAtIndex(0, statusByte)
 end
 
 
-export procedure ovrBeaconAdvertManager_updateAccelEnabled(isEnabledIn)
+export procedure ovrBeaconAdvertManager_updateStatus_accelError(isErrorIn)
+   statusByte = statusByte & ($FF - (1 << 5)) | (isErrorIn << 5)
+   call advertising_setByteAtIndex(0, statusByte)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateStatus_tempError(isErrorIn)
+   statusByte = statusByte & ($FF - (1 << 4)) | (isErrorIn << 4)
+   call advertising_setByteAtIndex(0, statusByte)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateStatus_lightError(isErrorIn)
+   statusByte = statusByte & ($FF - (1 << 3)) | (isErrorIn << 3)
+   call advertising_setByteAtIndex(0, statusByte)
+end
+
+
+export procedure ovrBeaconAdvertManager_updateStatus_accelEnabled(isEnabledIn)
    statusByte = statusByte & ($FF - (1 << 2)) | (isEnabledIn << 2)
    call advertising_setByteAtIndex(0, statusByte)
 end
 
 
-export procedure ovrBeaconAdvertManager_updateTempEnabled(isEnabledIn)
+export procedure ovrBeaconAdvertManager_updateStatus_tempEnabled(isEnabledIn)
    statusByte = statusByte & ($FF - (1 << 1)) | (isEnabledIn << 1)
    call advertising_setByteAtIndex(0, statusByte)
 end
 
 
-export procedure ovrBeaconAdvertManager_updateLightEnabled(isEnabledIn)
+export procedure ovrBeaconAdvertManager_updateStatus_lightEnabled(isEnabledIn)
    statusByte = statusByte & ($FF - (1 << 0)) | (isEnabledIn << 0)
    call advertising_setByteAtIndex(0, statusByte)
 end

@@ -32,8 +32,8 @@ export procedure advertising_init(devTypeIn, companyIdIn, numUserBytesIn)
    # custom manufacturer
    adv_data(3:1) = ADV_HEADER_NUM_BYTES + numUserBytes      # ad field length
    adv_data(4:1) = $ff                                      # ad field type = 0xFF (Manufacturer Specific Data)
-   adv_data(5:1) = (companyIdIn & $ff00) >> 8               # Company Identifier Code - octet 2
-   adv_data(6:1) = (companyIdIn & $00ff) >> 0               # unknown/prototype Company Identifier Code - octet 1
+   adv_data(5:1) = (companyIdIn >> 0) & $FF                 # Company Identifier Code - octet 2
+   adv_data(6:1) = (companyIdIn >> 8) & $FF                 # Company Identifier Code - octet 1
 
    adv_data(7:1) = devTypeIn
    call system_address_get()(adv_data(8:6))

@@ -45,7 +45,7 @@ export procedure ltr329_init()
    call attributes_write(char_lightSnsEnabled, 0, 1, PS_IS_LIGHT_ENABLED)
    call attributes_write(char_lightValue, 0, 1, lightVal_255)
    call ovrBeaconAdvertManager_updateLight(lightVal_255)
-   call ovrBeaconAdvertManager_updateLightEnabled(PS_IS_LIGHT_ENABLED)
+   call ovrBeaconAdvertManager_updateStatus_lightEnabled(PS_IS_LIGHT_ENABLED)
 
    needsInit = 0
 end
@@ -90,6 +90,6 @@ export procedure ltr329_update()
       # update our GATT attributs and advertising value
       call attributes_write(char_lightValue, 0, 1, lightVal_255)
       call ovrBeaconAdvertManager_updateLight(lightVal_255)
-      call ovrBeaconAdvertManager_updateLightEnabled(PS_IS_LIGHT_ENABLED)
+      call ovrBeaconAdvertManager_updateStatus_lightEnabled(PS_IS_LIGHT_ENABLED)
    end if
 end
