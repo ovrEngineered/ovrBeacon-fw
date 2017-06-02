@@ -4,7 +4,6 @@
 
 
 ######## private constants ########
-const UPDATE_RATE_S = 2
 
 
 ######## private variables ########
@@ -12,7 +11,16 @@ const UPDATE_RATE_S = 2
 
 ######## public procedures ########
 export procedure sensorManager_init()
-   call hardware_set_soft_timer(UPDATE_RATE_S * 32768, 0, 0)
+   call hardware_set_soft_timer(PS_SENSE_PERIOD_S * 32768, 0, 0)
+end
+
+export procedure sensorManager_setSensePeriod_s(period_sIn)
+   # cancel our current timer
+   call hardware_set_soft_timer(0, 0, 0)
+   # change our sense period
+   call persistentStore_setSensePeriod_s(period_sIn)
+   # reschedule our timer
+   call hardware_set_soft_timer(PS_SENSE_PERIOD_S * 32768, 0, 0)
 end
 
 

@@ -81,6 +81,12 @@
          <value type="hex">00</value>
       </characteristic>
 
+      <characteristic uuid="be60fae5-6f69-4934-a067-1aba35ab2cb8" id="char_sensePeriod">
+         <description>Sensor Period (s)</description>
+         <properties read="true" write="true" />
+         <value length="2" type="hex">02</value>
+      </characteristic>
+
       <characteristic uuid="157ce8f6-157e-4dd3-8f7a-33f7cd47860c" id="char_lightSnsEnabled">
          <description>Light Sensor Enabled</description>
          <properties read="true" write="true" />

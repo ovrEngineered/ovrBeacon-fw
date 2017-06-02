@@ -23,9 +23,12 @@ const KEY_ACCEL_FREEFALL_THRESH = $8008
 const KEY_ACCEL_RANGE = $8009
 const KEY_ACCEL_LED_COLOR_RGB = $800A
 
+const KEY_SENSE_PERIOD_S = $800B
+
 const DEFAULT_ENUM_COLOR_RGB() = "\xFF\xFF\xFF"
 const DEFAULT_ACCEL_THRESH_MAX = 255
 const DEFAULT_ACCEL_LED_COLOR_RGB() = "\x00\x00\xFF"
+const DEFAULT_SENSE_PERIOD_S = 2
 
 
 ######## public variables ########
@@ -42,6 +45,8 @@ export dim PS_ACCEL_ACT_THRESH
 export dim PS_ACCEL_INACT_THRESH
 export dim PS_ACCEL_RANGE
 export dim PS_ACCEL_LED_COLOR_RGB(3)
+
+export dim PS_SENSE_PERIOD_S
 
 
 ######## private variables ########
@@ -139,6 +144,14 @@ export procedure persistentStore_init2()
       PS_ACCEL_LED_COLOR_RGB(1:1) = DEFAULT_ACCEL_LED_COLOR_RGB(1:1)
       PS_ACCEL_LED_COLOR_RGB(2:1) = DEFAULT_ACCEL_LED_COLOR_RGB(2:1)
    end if
+
+   call flash_ps_load(KEY_SENSE_PERIOD_S)(result, value_len, value_data(0:2))
+   if( result = 0 ) then
+      PS_SENSE_PERIOD_S = value_data(0:1) | (value_data(1:1) << 8)
+   end if
+   if( result != 0 ) then
+      PS_SENSE_PERIOD_S = DEFAULT_SENSE_PERIOD_S
+   end if
 end
 
 
@@ -199,6 +212,13 @@ export procedure persistentStore_setAccelColorRgb(rgbIn())
    PS_ACCEL_LED_COLOR_RGB(0:1) = rgbIn(0:1)
    PS_ACCEL_LED_COLOR_RGB(1:1) = rgbIn(1:1)
    PS_ACCEL_LED_COLOR_RGB(2:1) = rgbIn(2:1)
+end
+
+
+export procedure persistentStore_setSensePeriod_s(period_sIn)
+   call flash_ps_save(KEY_SENSE_PERIOD_S, 2, period_sIn)
+
+   PS_SENSE_PERIOD_S = period_sIn
 end
 
 
