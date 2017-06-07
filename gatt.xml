@@ -3,10 +3,10 @@
    <service uuid="1800">
       <!-- <description>Generic Access Profile</description> -->
 
-      <characteristic uuid="2a00">
+      <characteristic uuid="2a00" id="char_devName">
          <!-- <description>Device Name</description> -->
-         <properties read="true" const="true" />
-         <value>ovrBeacon</value>
+         <properties read="true" />
+         <value>ovrBeacon-XX</value>
       </characteristic>
 
       <characteristic uuid="2a01">

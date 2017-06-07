@@ -19,6 +19,11 @@ import "ota.bgs"
 import "gatt.bgs"
 
 
+######## private variables ########
+dim devAddr(6)
+dim devName(12)
+
+
 ######## system events ########
 event system_boot(major, minor, patch, build, ll_version, protocol_version, hw)
    # initialize our subsystems
@@ -31,14 +36,20 @@ event system_boot(major, minor, patch, build, ll_version, protocol_version, hw)
 
    call pca9624_init()
    call ledManager_init()
-   
-   call chargingManager_init()
 
+   #call chargingManager_init()
    call battery_init()
    call adxl345_init()
    call si7050_init()
    call ltr329_init()
    call sensorManager_init()
+
+   # set our device name
+   call system_address_get()(devAddr(0:6))
+   devName(0:10) = "ovrBeacon-"
+   devName(10:1) = (devAddr(5:1)/$10) + 48 + ((devAddr(5:1)/$10)/10*7)
+   devName(11:1) = (devAddr(5:1)&$0F) + 48 + ((devAddr(5:1)&$0F)/10*7)
+   call attributes_write(char_devName, 0, 12, devName(0:12))
 
    call ovrBeaconAdvertManager_start()
 end

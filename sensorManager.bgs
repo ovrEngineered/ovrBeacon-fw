@@ -41,7 +41,7 @@ event hardware_soft_timer(handle)
    call ltr329_update()
    call adxl345_update()
    call si7050_update()
-   call chargingManager_update()
+   #call chargingManager_update()
    call battery_update()
 
    # now update our sensor status
