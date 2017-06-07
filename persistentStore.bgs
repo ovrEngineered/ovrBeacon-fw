@@ -216,7 +216,9 @@ end
 
 
 export procedure persistentStore_setSensePeriod_s(period_sIn)
-   call flash_ps_save(KEY_SENSE_PERIOD_S, 2, period_sIn)
+   value_data(0:1) = (period_sIn & $000000FF)
+   value_data(1:1) = ((period_sIn >> 8) & $000000FF)
+   call flash_ps_save(KEY_SENSE_PERIOD_S, 2, value_data(0:2))
 
    PS_SENSE_PERIOD_S = period_sIn
 end

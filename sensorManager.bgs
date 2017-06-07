@@ -7,12 +7,17 @@
 
 
 ######## private variables ########
+dim tmp(2)
 
 
 ######## public procedures ########
 export procedure sensorManager_init()
    call hardware_set_soft_timer(PS_SENSE_PERIOD_S * 32768, 0, 0)
+   tmp(0:1) = (PS_SENSE_PERIOD_S >> 0) & $00FF
+   tmp(1:1) = (PS_SENSE_PERIOD_S >> 8) & $00FF
+   call attributes_write(char_sensePeriod, 0, 2, tmp(0:2))
 end
+
 
 export procedure sensorManager_setSensePeriod_s(period_sIn)
    # cancel our current timer
