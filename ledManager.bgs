@@ -63,7 +63,7 @@ end
 ######## public procedures ########
 export procedure ledManager_init()
    call attributes_write(char_alertColor, 0, 3, PS_ENUM_COLOR_RGB(0:COLOR_RGB_LEN))
-   call attributes_write(char_accelLedLinkColor, 0, COLOR_RGB_LEN, PS_ACCEL_LED_COLOR_RGB(0:char_accelLedLinkColor))
+   call attributes_write(char_accelLedLinkColor, 0, COLOR_RGB_LEN, PS_ACCEL_LED_COLOR_RGB(0:COLOR_RGB_LEN))
 
    call pca9624_blank()
 end
